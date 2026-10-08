@@ -30,8 +30,8 @@ Editor Markdown desktop con anteprima in tempo reale, scritto in Go + [Wails v2]
 2. Avvia MarkMirror dal menu delle applicazioni, oppure apri un file `.md` con "Apri con → MarkMirror".
 
 Per disinstallare:
-	```sh
-	sudo sh build/linux/install.sh --uninstall
-	```
+  ```sh
+  sudo sh build/linux/install.sh --uninstall
+  ```
 
 Licenza MIT — © Alessio Abrugiati
