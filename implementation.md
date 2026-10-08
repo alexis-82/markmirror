@@ -14,27 +14,26 @@ formule e diagrammi.
 
 ---
 
-## 1. Ricordare la finestra
+## 1. Ricordare la finestra ✅
 
 **Obiettivo:** alla riapertura, la finestra ha la stessa dimensione, posizione e stato
 (ingrandita o no) dell'ultima chiusura.
 
 ### Task
-- [ ] Aggiungere a `Settings` (`settings.go`) i campi della finestra: `X`, `Y`, `Width`, `Height`, `Maximised`.
-- [ ] Alla chiusura (`beforeClose` in `app.go`, e in `Quit`) leggere lo stato con
-      `runtime.WindowGetSize`, `runtime.WindowGetPosition`, `runtime.WindowIsMaximised` e salvarlo.
-      Se la finestra è ingrandita, salvare solo `Maximised = true` e mantenere le ultime dimensioni "normali".
-      Se è ridotta a icona, non salvare nulla.
-- [ ] In `main.go` usare le dimensioni salvate per `Width`/`Height` e `WindowStartState: options.Maximised` se serve.
-- [ ] In `startup` ripristinare la posizione con `runtime.WindowSetPosition`.
-- [ ] **Controllo monitor:** se la posizione salvata è fuori da tutti gli schermi (monitor scollegato),
-      centrare la finestra (`runtime.ScreenGetAll` + `runtime.WindowCenter`).
-- [ ] Rispettare i minimi esistenti (`MinWidth` 700, `MinHeight` 400).
+- [x] Aggiungere a `Settings` (`settings.go`) il campo `Window` (`X`, `Y`, `Width`, `Height`, `Maximised`).
+- [x] Alla chiusura salvare lo stato in `beforeClose` (Wails la chiama anche da `Quit`).
+      Si usa `GetWindowPlacement` di Win32 invece delle funzioni `runtime.Window*`: restituisce
+      le dimensioni "normali" anche se la finestra è ingrandita o ridotta a icona, e da ridotta
+      a icona ricorda se prima era ingrandita.
+- [x] In `main.go` `WindowStartState: options.Maximised` se l'ultima volta era ingrandita.
+- [x] In `startup` ripristinare posizione e dimensioni con `SetWindowPlacement`, prima che Wails mostri la finestra.
+- [x] **Controllo monitor:** se il centro della barra del titolo non cade su nessuno schermo
+      (monitor scollegato), non si ripristina nulla e la finestra resta centrata.
+- [x] Rispettare i minimi esistenti (`MinWidth` 700, `MinHeight` 400), ora costanti in `settings.go`.
+- [x] Test: lettura di un `settings.json` vecchio, valori non validi, andata e ritorno JSON,
+      dimensione della struttura `WINDOWPLACEMENT`.
 
-### Attenzione
-- `beforeClose` può bloccare la chiusura (modifiche non salvate): lo stato va salvato anche
-  nel percorso `Quit()`, che chiude senza ripassare dal blocco.
-- Test: serializzazione/lettura dei nuovi campi e valori di default per un `settings.json` vecchio.
+File: `window.go`, `window_windows.go`, `settings.go`, `app.go`, `main.go`.
 
 ---
 
@@ -111,27 +110,29 @@ accanto al documento e inserisce il link markdown.
 
 ---
 
-## 5. Esporta in HTML / PDF
+## 5. Esporta in HTML / PDF ✅
 
 **Obiettivo:** File → Esporta → HTML… / PDF… produce un documento uguale all'anteprima.
 
 ### HTML
-- [ ] Voce di menu `menu.go`: sottomenu **Esporta** con "HTML..." e "PDF...".
-- [ ] Il frontend genera l'HTML completo: `<!doctype html>`, titolo = nome del file, CSS dell'anteprima
-      (solo la parte tipografica, non quella dell'interfaccia), CSS di highlight.js e KaTeX.
-- [ ] **Immagini locali:** nell'anteprima puntano a `/localfile?...`, che fuori dall'app non esiste.
-      Opzioni: (a) incorporarle in base64 (file unico, consigliato), (b) riscrivere i percorsi relativi originali.
-- [ ] **Mermaid:** esportare gli SVG già disegnati, non il sorgente.
-- [ ] Tema dell'export: sempre chiaro (adatto a stampa e condivisione), o scelta in un'opzione.
-- [ ] Nuovo metodo Go `ExportHTML(html string) error` con finestra "Salva" (filtro `*.html`,
-      nome predefinito = nome del documento) e scrittura atomica (`writeFileAtomic`).
+- [x] Voce di menu `menu.go`: sottomenu **File → Esporta** con "HTML..." e "PDF / Stampa..." (Ctrl+P).
+- [x] Il frontend (`export.ts`) genera l'HTML completo: titolo = nome del file, stessi CSS dell'anteprima.
+      Il CSS è stato diviso in `theme.css` (colori), `markdown.css` (contenuto + highlight.js) e
+      `style.css` (interfaccia); l'export incorpora i primi due con l'import `?raw` di Vite.
+- [x] **Immagini locali:** incorporate in base64 (file unico, si può spostare o inviare).
+- [x] Tema dell'export: sempre chiaro. Il tema scuro in `theme.css` vale solo `@media screen`.
+- [x] Metodo Go `ExportHTML(html string) (string, error)` (`export.go`) con finestra "Salva"
+      (filtro `*.html`, nome predefinito = nome del documento) e scrittura atomica.
+- [ ] Da fare con il punto 4: aggiungere il CSS di KaTeX all'export. Mermaid: l'export copia il DOM
+      dell'anteprima, quindi gli SVG già disegnati sono inclusi automaticamente.
 
 ### PDF
-- [ ] Strada più semplice: CSS `@media print` (nasconde barra strumenti, editor e barra di stato,
-      mostra solo l'anteprima a tutta pagina) + `window.print()`, poi l'utente sceglie "Microsoft Print to PDF".
-- [ ] Strada migliore (da verificare): WebView2 offre `PrintToPdf`, ma Wails v2 non lo espone;
-      richiederebbe accesso diretto all'oggetto WebView2. Valutare costi/benefici prima di procedere.
-- [ ] Interruzioni di pagina: evitare tagli dentro blocchi di codice, tabelle e immagini (`break-inside: avoid`).
+- [x] CSS `@media print` (nasconde barra strumenti, editor, divisore e barra di stato, mostra solo
+      l'anteprima a tutta pagina, sempre in tema chiaro) + `window.print()`: dal dialogo di stampa si sceglie
+      "Salva come PDF". Il nome proposto per il PDF è il nome del documento.
+- [ ] Non fatto: PDF diretto senza dialogo (`PrintToPdf` di WebView2 non è esposto da Wails v2).
+- [x] Interruzioni di pagina: niente tagli dentro codice, citazioni, immagini e righe di tabella;
+      il codice lungo va a capo invece di essere tagliato; i titoli non restano soli in fondo alla pagina.
 
 ---
 

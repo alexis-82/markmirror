@@ -20,6 +20,7 @@ func TestMenuBarStructLayout(t *testing.T) {
 		{"MENUITEMINFOW", unsafe.Sizeof(menuItemInfo{}), 80},
 		{"DRAWITEMSTRUCT", unsafe.Sizeof(drawItemStruct{}), 64},
 		{"UAHDRAWMENUITEM", unsafe.Sizeof(uahDrawMenuItem{}), 144},
+		{"WINDOWPLACEMENT", unsafe.Sizeof(windowPlacementInfo{}), 44},
 		{"UAHDRAWMENUITEM.umi", unsafe.Offsetof(uahDrawMenuItem{}.position), 88},
 	}
 	for _, c := range cases {

@@ -3,8 +3,9 @@ import './style.css';
 import {createEditor, edit, EditCommand, format, FormatCommand, insertImage, replaceDocument, resetDocument, scrollEditorToLine, setEditorDark, topVisibleLine} from './editor';
 import {Preview, renderStatic} from './preview';
 import {GUIDE, WELCOME} from './content';
+import {buildHtml} from './export';
 import {
-    GetSettings, ImageLink, InitialFile, NewFile, OpenFile, OpenPath, PickImage, Quit, ReloadFile, SaveFile, SaveFileAs, SetModified,
+    ExportHTML, GetSettings, ImageLink, InitialFile, NewFile, OpenFile, OpenPath, PickImage, Quit, ReloadFile, SaveFile, SaveFileAs, SetModified,
 } from '../wailsjs/go/main/App';
 import {main} from '../wailsjs/go/models';
 import {EventsOn, OnFileDrop} from '../wailsjs/runtime/runtime';
@@ -230,6 +231,36 @@ EventsOn('file:changed', (path: string) => {
     handleExternalChange();
 });
 
+// ---- Esportazione -----------------------------------------------------------
+
+/** Titolo del documento esportato: il nome del file senza estensione. */
+function documentTitle(): string {
+    const name = currentPath.split(/[\\/]/).pop() ?? '';
+    return name.replace(/\.[^.]+$/, '') || 'Documento';
+}
+
+async function exportHtml(): Promise<void> {
+    renderNow(); // l'anteprima potrebbe essere indietro di qualche tasto
+    const path = await ExportHTML(await buildHtml($('preview'), documentTitle()));
+    if (path) {
+        await showDialog('Esportazione completata', `Documento esportato in:\n${path}`,
+            [{id: 'ok', label: 'OK', primary: true}]);
+    }
+}
+
+/**
+ * Apre la stampa di sistema con la sola anteprima (vedi @media print):
+ * da lì si sceglie "Salva come PDF" o una stampante. Il titolo della pagina
+ * diventa il nome proposto per il PDF.
+ */
+async function exportPdf(): Promise<void> {
+    renderNow();
+    const appTitle = document.title;
+    document.title = documentTitle();
+    window.addEventListener('afterprint', () => document.title = appTitle, {once: true});
+    window.print();
+}
+
 const fileCommands: Record<string, () => Promise<unknown>> = {
     'menu:new': async () => {
         if (!(await confirmDiscard())) return;
@@ -247,6 +278,8 @@ const fileCommands: Record<string, () => Promise<unknown>> = {
     ),
     'menu:save': () => save(false),
     'menu:save-as': () => save(true),
+    'menu:export-html': exportHtml,
+    'menu:export-pdf': exportPdf,
     'app:close-requested': async () => {
         if (await confirmDiscard()) await Quit();
     },

@@ -10,9 +10,25 @@ import (
 
 // Settings sono le preferenze persistenti dell'utente.
 type Settings struct {
-	Theme      string `json:"theme"` // "system", "light" o "dark"
-	SyncScroll bool   `json:"syncScroll"`
+	Theme      string       `json:"theme"` // "system", "light" o "dark"
+	SyncScroll bool         `json:"syncScroll"`
+	Window     *WindowState `json:"window,omitempty"`
 }
+
+// WindowState è la posizione della finestra all'ultima chiusura. X, Y,
+// Width e Height sono le dimensioni "normali" (non ingrandita), in pixel.
+type WindowState struct {
+	X         int32 `json:"x"`
+	Y         int32 `json:"y"`
+	Width     int32 `json:"width"`
+	Height    int32 `json:"height"`
+	Maximised bool  `json:"maximised"`
+}
+
+const (
+	minWindowWidth  = 700
+	minWindowHeight = 400
+)
 
 func defaultSettings() Settings {
 	return Settings{Theme: "system", SyncScroll: true}
@@ -36,6 +52,12 @@ func loadSettings() Settings {
 	if err != nil {
 		return s
 	}
+	return parseSettings(data)
+}
+
+// parseSettings interpreta settings.json, correggendo i valori non validi.
+func parseSettings(data []byte) Settings {
+	s := defaultSettings()
 	if err := json.Unmarshal(data, &s); err != nil {
 		return defaultSettings()
 	}
@@ -43,6 +65,10 @@ func loadSettings() Settings {
 	case "system", "light", "dark":
 	default:
 		s.Theme = "system"
+	}
+	if w := s.Window; w != nil {
+		w.Width = max(w.Width, minWindowWidth)
+		w.Height = max(w.Height, minWindowHeight)
 	}
 	return s
 }

@@ -33,6 +33,10 @@ func (a *App) buildMenu() *menu.Menu {
 	file.AddText("Salva", keys.CmdOrCtrl("s"), a.emitter("menu:save"))
 	file.AddText("Salva come...", keys.Combo("s", keys.CmdOrCtrlKey, keys.ShiftKey), a.emitter("menu:save-as"))
 	file.AddSeparator()
+	export := file.AddSubmenu("Esporta")
+	export.AddText("HTML...", nil, a.emitter("menu:export-html"))
+	export.AddText("PDF / Stampa...", keys.CmdOrCtrl("p"), a.emitter("menu:export-pdf"))
+	file.AddSeparator()
 	file.AddText("Esci", keys.CmdOrCtrl("q"), func(*menu.CallbackData) { runtime.Quit(a.ctx) })
 
 	// Senza scorciatoie: i tasti (Ctrl+Z, Ctrl+C, ...) li gestisce già l'editor.

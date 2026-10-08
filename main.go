@@ -18,12 +18,13 @@ func main() {
 	app := NewApp(initialFileFromArgs())
 
 	err := wails.Run(&options.App{
-		Title:     appName,
-		Width:     1200,
-		Height:    800,
-		MinWidth:  700,
-		MinHeight: 400,
-		Menu:      app.buildMenu(),
+		Title:            appName,
+		Width:            1200,
+		Height:           800,
+		MinWidth:         minWindowWidth,
+		MinHeight:        minWindowHeight,
+		WindowStartState: app.windowStartState(),
+		Menu:             app.buildMenu(),
 		AssetServer: &assetserver.Options{
 			Assets:     assets,
 			Middleware: app.localFiles,

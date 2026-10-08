@@ -52,6 +52,7 @@ func NewApp(initialFile string) *App {
 
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	a.restoreWindow()
 	a.applyWindowTheme()
 	a.updateTitle()
 	go a.watchFile()
@@ -59,12 +60,15 @@ func (a *App) startup(ctx context.Context) {
 
 // beforeClose blocca la chiusura se ci sono modifiche non salvate e chiede
 // al frontend di gestire la conferma; il frontend chiamerà Quit.
+// Viene chiamata anche da Quit, quindi la finestra si salva qui.
 func (a *App) beforeClose(ctx context.Context) bool {
 	a.mu.Lock()
 	block := a.modified && !a.quitting
 	a.mu.Unlock()
 	if block {
 		runtime.EventsEmit(ctx, "app:close-requested")
+	} else {
+		a.saveWindow()
 	}
 	return block
 }

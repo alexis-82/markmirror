@@ -11,6 +11,8 @@ Editor Markdown desktop con anteprima in tempo reale, scritto in Go + [Wails v2]
 - Immagini locali con percorsi relativi alla cartella del documento
 - HTML dell'anteprima sanificato con DOMPurify; i link si aprono nel browser di sistema
 - Tema chiaro / scuro / di sistema, salvato tra una sessione e l'altra; in tema scuro anche la barra dei menu e i menu a tendina sono scuri
+- Posizione, dimensione e stato ingrandito della finestra ricordati alla riapertura
+- Esportazione in HTML (file unico con stili e immagini incorporate) e in PDF / stampa (Ctrl+P)
 - Barra strumenti: grassetto, corsivo, titolo, elenchi, citazione, link, codice, immagini
 - Trascinamento di file `.md` (apertura) e immagini (inserimento) nella finestra
 - Conferma delle modifiche non salvate su Nuovo / Apri / Ricarica / chiusura
@@ -27,6 +29,8 @@ Editor Markdown desktop con anteprima in tempo reale, scritto in Go + [Wails v2]
 | `app.go` | Stato del documento, apertura/salvataggio, titolo finestra |
 | `menu.go` | Menu nativo (File, Modifica, Opzioni, Aiuto) |
 | `menubar_windows.go` | Barra dei menu e menu a tendina scuri su Windows |
+| `window.go`, `window_windows.go` | Salvataggio e ripristino di posizione e dimensione della finestra |
+| `export.go` | Salvataggio dell'HTML esportato |
 | `watch.go` | Controllo periodico delle modifiche esterne al file aperto |
 | `settings.go` | Preferenze in `%APPDATA%\MarkMirror\settings.json` |
 | `localfiles.go` | Endpoint `/localfile` che serve le immagini locali (solo estensioni immagine) |
@@ -34,6 +38,8 @@ Editor Markdown desktop con anteprima in tempo reale, scritto in Go + [Wails v2]
 | `frontend/src/editor.ts` | Configurazione CodeMirror e comandi di formattazione |
 | `frontend/src/preview.ts` | Rendering, aggiornamento incrementale, scroll sincronizzato |
 | `frontend/src/content.ts` | Testo di benvenuto e guida Markdown |
+| `frontend/src/export.ts` | Costruzione dell'HTML esportato |
+| `frontend/src/theme.css`, `markdown.css`, `style.css` | Colori, stile del documento (anteprima, export, stampa), interfaccia |
 
 ## Sviluppo
 
