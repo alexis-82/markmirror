@@ -21,26 +21,6 @@ Editor Markdown desktop con anteprima in tempo reale, scritto in Go + [Wails v2]
 - Conserva le terminazioni di riga (CRLF/LF) del file; salvataggio atomico
 - Apertura di un file passato da riga di comando (`MarkMirror.exe documento.md`)
 
-## Struttura
-
-| File | Contenuto |
-|---|---|
-| `main.go` | Avvio Wails, opzioni finestra |
-| `app.go` | Stato del documento, apertura/salvataggio, titolo finestra |
-| `menu.go` | Menu nativo (File, Modifica, Opzioni, Aiuto) |
-| `menubar_windows.go` | Barra dei menu e menu a tendina scuri su Windows |
-| `window.go`, `window_windows.go` | Salvataggio e ripristino di posizione e dimensione della finestra |
-| `export.go` | Salvataggio dell'HTML esportato |
-| `watch.go` | Controllo periodico delle modifiche esterne al file aperto |
-| `settings.go` | Preferenze in `%APPDATA%\MarkMirror\settings.json` |
-| `localfiles.go` | Endpoint `/localfile` che serve le immagini locali (solo estensioni immagine) |
-| `frontend/src/main.ts` | Collegamento tra editor, anteprima, comandi e dialoghi |
-| `frontend/src/editor.ts` | Configurazione CodeMirror e comandi di formattazione |
-| `frontend/src/preview.ts` | Rendering, aggiornamento incrementale, scroll sincronizzato |
-| `frontend/src/content.ts` | Testo di benvenuto e guida Markdown |
-| `frontend/src/export.ts` | Costruzione dell'HTML esportato |
-| `frontend/src/theme.css`, `markdown.css`, `style.css` | Colori, stile del documento (anteprima, export, stampa), interfaccia |
-
 ## Installazione su Linux
 
 1. Installa (sempre dalla cartella principale):
