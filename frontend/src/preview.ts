@@ -26,6 +26,35 @@ md.core.ruler.push('source_lines', state => {
     }
 });
 
+/**
+ * Identificativo di un titolo come su GitHub: minuscole, spazi → "-",
+ * punteggiatura tolta. "## Perché usarlo?" → "perché-usarlo".
+ */
+export function slugify(text: string): string {
+    return text.trim().toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, '').replace(/\s/g, '-');
+}
+
+// Dà un id a ogni titolo, così i link dell'indice (#titolo) funzionano.
+// I doppioni ricevono un suffisso: "note", "note-1", "note-2".
+md.core.ruler.push('heading_ids', state => {
+    const used = new Map<string, number>();
+    state.tokens.forEach((token, i) => {
+        if (token.type !== 'heading_open') return;
+        const text = (state.tokens[i + 1].children ?? [])
+            .filter(t => t.type === 'text' || t.type === 'code_inline')
+            .map(t => t.content)
+            .join('');
+        const base = slugify(text);
+        const count = used.get(base) ?? 0;
+        used.set(base, count + 1);
+        token.attrSet('id', count ? `${base}-${count}` : base);
+    });
+});
+
+// DOMPurify antepone questo prefisso agli id (SANITIZE_NAMED_PROPS), così un
+// titolo come "Title" non può sovrascrivere proprietà di document.
+export const ID_PREFIX = 'user-content-';
+
 const remoteUrl = /^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i;
 const windowsPath = /^[a-z]:[\\/]/i;
 
@@ -47,7 +76,7 @@ function localUrl(src: string, base: string): string {
 }
 
 function render(source: string, base: string): DocumentFragment {
-    const frag = DOMPurify.sanitize(md.render(source), {RETURN_DOM_FRAGMENT: true});
+    const frag = DOMPurify.sanitize(md.render(source), {RETURN_DOM_FRAGMENT: true, SANITIZE_NAMED_PROPS: true});
     for (const img of frag.querySelectorAll('img')) {
         const src = img.getAttribute('src');
         if (src && isLocal(src)) img.setAttribute('src', localUrl(src, base));
@@ -196,8 +225,28 @@ export class Preview {
         if (!link) return;
         e.preventDefault();
         const href = link.getAttribute('href') ?? '';
-        if (/^(https?:|mailto:)/i.test(href)) BrowserOpenURL(href);
+        if (href.startsWith('#')) this.scrollToAnchor(href.slice(1));
+        else if (/^(https?:|mailto:)/i.test(href)) BrowserOpenURL(browserSafe(href));
+        else if (/^www\./i.test(href)) BrowserOpenURL(browserSafe(`https://${href}`));
     }
+
+    /** Porta in cima all'anteprima il titolo indicato da un link "#titolo". */
+    private scrollToAnchor(fragment: string): void {
+        let name = fragment;
+        try {
+            name = decodeURIComponent(fragment);
+        } catch { /* lascia il frammento com'è */ }
+        const target = this.root.querySelector<HTMLElement>(`#${CSS.escape(ID_PREFIX + slugify(name))}`);
+        if (target) this.root.scrollTop = this.offsetOf(target) - SCROLL_MARGIN;
+    }
+}
+
+/**
+ * Wails rifiuta in silenzio gli URL con caratteri come ( ) ~ ! (es. molte
+ * pagine di Wikipedia): li codifichiamo, il browser li interpreta allo stesso modo.
+ */
+function browserSafe(url: string): string {
+    return url.replace(/[;|`$\\<>*{}[\]()~! ]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0'));
 }
 
 export function renderStatic(target: HTMLElement, source: string): void {

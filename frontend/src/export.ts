@@ -1,5 +1,6 @@
 import themeCss from './theme.css?raw';
 import markdownCss from './markdown.css?raw';
+import {ID_PREFIX} from './preview';
 
 // Impaginazione del file esportato: il contenuto usa gli stessi stili dell'anteprima.
 const pageCss = `
@@ -28,6 +29,8 @@ export async function buildHtml(preview: HTMLElement, title: string): Promise<st
     article.append(...Array.from(preview.childNodes, n => n.cloneNode(true)));
 
     for (const el of article.querySelectorAll('[data-line]')) el.removeAttribute('data-line');
+    // Nel file esportato i link dell'indice (#titolo) puntano direttamente all'id.
+    for (const el of article.querySelectorAll(`[id^="${ID_PREFIX}"]`)) el.id = el.id.slice(ID_PREFIX.length);
     await Promise.all(Array.from(article.querySelectorAll('img'), embedLocalImage));
 
     return `<!DOCTYPE html>
