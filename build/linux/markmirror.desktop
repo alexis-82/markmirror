@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=MarkMirror
+GenericName=Markdown Editor
+GenericName[it]=Editor Markdown
+Comment=Markdown editor with live preview
+Comment[it]=Editor Markdown con anteprima in tempo reale
+Exec=/usr/local/bin/markmirror-launch.sh %f
+Icon=markmirror
+Terminal=false
+Categories=Office;TextEditor;Utility;
+MimeType=text/markdown;text/x-markdown;
+Keywords=markdown;md;editor;preview;anteprima;
+StartupWMClass=markmirror

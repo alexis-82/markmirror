@@ -41,15 +41,14 @@ Editor Markdown desktop con anteprima in tempo reale, scritto in Go + [Wails v2]
 | `frontend/src/export.ts` | Costruzione dell'HTML esportato |
 | `frontend/src/theme.css`, `markdown.css`, `style.css` | Colori, stile del documento (anteprima, export, stampa), interfaccia |
 
-## Sviluppo
+## Installazione su Linux
 
-```sh
-wails dev          # avvio con hot reload
-go test ./...      # test del backend
-wails build        # eseguibile in build/bin/MarkMirror.exe
-wails build -nsis  # anche l'installer (richiede NSIS)
-```
+1. Installa (sempre dalla cartella principale):
+   ```sh
+   sudo sh build/linux/install.sh
+   ```
+2. Avvia MarkMirror dal menu delle applicazioni, oppure apri un file `.md` con "Apri con → MarkMirror".
 
-L'icona dell'applicazione è `build/appicon.png`; `build/windows/icon.ico` viene rigenerato da Wails se assente.
+Per disinstallare: `sudo sh build/linux/install.sh --uninstall`
 
 Licenza MIT — © Alessio Abrugiati
