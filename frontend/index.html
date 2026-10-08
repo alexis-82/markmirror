@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>MarkMirror</title>
+</head>
+<body>
+<div id="app">
+    <div class="toolbar" role="toolbar" aria-label="Formattazione">
+        <button data-cmd="bold" title="Grassetto (Ctrl+B)"><b>B</b></button>
+        <button data-cmd="italic" title="Corsivo (Ctrl+I)"><i>I</i></button>
+        <button data-cmd="heading" title="Titolo (# / ## / ###)">H</button>
+        <span class="sep"></span>
+        <button data-cmd="list" title="Elenco puntato">• Elenco</button>
+        <button data-cmd="ordered" title="Elenco numerato">1. Elenco</button>
+        <button data-cmd="quote" title="Citazione">“ Citazione</button>
+        <span class="sep"></span>
+        <button data-cmd="link" title="Link (Ctrl+K)">Link</button>
+        <button data-cmd="code" title="Codice in linea"><code>code</code></button>
+        <button data-cmd="codeblock" title="Blocco di codice"><code>{ }</code></button>
+        <span class="sep"></span>
+        <button data-cmd="image" title="Inserisci un modello di immagine">Immagine</button>
+        <button data-cmd="image-file" title="Scegli un'immagine dal disco (o trascinala nella finestra)">Immagine da file…</button>
+    </div>
+
+    <main class="panes" id="panes">
+        <section class="pane editor-pane" id="editor" aria-label="Editor"></section>
+        <div class="divider" id="divider" role="separator" aria-orientation="vertical" title="Trascina per ridimensionare, doppio clic per centrare"></div>
+        <article class="pane preview markdown-body" id="preview" aria-label="Anteprima"></article>
+    </main>
+
+    <footer class="statusbar">
+        <span id="status-file"></span>
+        <span id="status-stats"></span>
+    </footer>
+</div>
+
+<dialog id="dialog" class="dialog">
+    <form method="dialog">
+        <h2 id="dialog-title"></h2>
+        <p id="dialog-message"></p>
+        <div class="dialog-buttons" id="dialog-buttons"></div>
+    </form>
+</dialog>
+
+<dialog id="guide" class="dialog guide">
+    <form method="dialog">
+        <div class="guide-head">
+            <h2>Guida Markdown</h2>
+            <button value="close" title="Chiudi">✕</button>
+        </div>
+        <div class="guide-body markdown-body" id="guide-body"></div>
+    </form>
+</dialog>
+
+<script src="./src/main.ts" type="module"></script>
+</body>
+</html>
