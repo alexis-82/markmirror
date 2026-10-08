@@ -1,5 +1,0 @@
-Comandi
-
-wails dev       # sviluppo con hot reload
-wails build     # eseguibile
-go test ./...   # test
