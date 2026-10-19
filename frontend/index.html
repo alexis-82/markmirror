@@ -54,6 +54,22 @@
     </form>
 </dialog>
 
+<dialog id="update" class="dialog update">
+    <form method="dialog">
+        <h2>Aggiornamento disponibile</h2>
+        <p id="update-versions"></p>
+        <div class="update-notes markdown-body" id="update-notes"></div>
+        <p class="update-muted" id="update-no-asset" hidden>La release non contiene un file installabile su questo sistema: scarica la nuova versione dalla pagina delle release di GitHub.</p>
+        <div class="update-progress" id="update-progress" hidden><div class="update-bar" id="update-bar"></div></div>
+        <p class="update-muted" id="update-status" hidden></p>
+        <p class="update-error" id="update-error" hidden></p>
+        <div class="dialog-buttons">
+            <button type="button" id="update-later">Più tardi</button>
+            <button type="button" class="primary" id="update-install">Scarica e installa</button>
+        </div>
+    </form>
+</dialog>
+
 <script src="./src/main.ts" type="module"></script>
 </body>
 </html>

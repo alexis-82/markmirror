@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  AppStream metadata for MarkMirror, installed by the .deb and .rpm packages
+  in /usr/share/metainfo/ so that software centers (KDE Discover, GNOME
+  Software) show MarkMirror as an application.
+
+  <releases> is added at build time by build/linux/metainfo-release.sh with
+  the version of the git tag: do not add it here.
+-->
+<component type="desktop-application">
+  <id>io.github.alexis_82.markmirror</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+
+  <name>MarkMirror</name>
+  <summary>Markdown editor with live preview</summary>
+  <summary xml:lang="it">Editor Markdown con anteprima in tempo reale</summary>
+
+  <developer id="io.github.alexis_82">
+    <name>alexis-82</name>
+  </developer>
+
+  <description>
+    <p>MarkMirror is a Markdown editor that shows the rendered document next to the text while you type.</p>
+    <p xml:lang="it">MarkMirror è un editor Markdown che mostra il documento formattato accanto al testo mentre scrivi.</p>
+    <p>It supports synchronized scrolling, light and dark themes, images, and export to HTML and PDF.</p>
+    <p xml:lang="it">Supporta lo scroll sincronizzato, i temi chiaro e scuro, le immagini e l'esportazione in HTML e PDF.</p>
+  </description>
+
+  <!-- Discover only shows components that name their package: MarkMirror is
+       not in the distribution's AppStream catalog, so the name must be here -->
+  <pkgname>markmirror</pkgname>
+
+  <launchable type="desktop-id">markmirror.desktop</launchable>
+  <icon type="stock">markmirror</icon>
+
+  <!-- Same as Categories= in markmirror.desktop -->
+  <categories>
+    <category>Office</category>
+    <category>TextEditor</category>
+    <category>Utility</category>
+  </categories>
+
+  <url type="homepage">https://github.com/alexis-82/markmirror</url>
+  <url type="bugtracker">https://github.com/alexis-82/markmirror/issues</url>
+  <url type="vcs-browser">https://github.com/alexis-82/markmirror</url>
+
+  <provides>
+    <binary>markmirror</binary>
+    <mediatype>text/markdown</mediatype>
+  </provides>
+
+  <content_rating type="oars-1.1"/>
+</component>

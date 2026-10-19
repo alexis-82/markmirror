@@ -1,0 +1,68 @@
+# Debian and Fedora packages for MarkMirror, built with nfpm (https://nfpm.goreleaser.com).
+# From the project root, after the Linux build:
+#
+#   wails build -tags webkit2_41 -ldflags "-X main.version=v2.1.0"
+#   VERSION=2.1.0 ARCH=amd64 nfpm pkg --config build/linux/nfpm.yaml --packager deb --target build/bin/
+#   VERSION=2.1.0 ARCH=amd64 nfpm pkg --config build/linux/nfpm.yaml --packager rpm --target build/bin/
+#
+# Output (same names as update.AssetNames in internal/update/update.go):
+#   build/bin/markmirror_2.1.0_amd64.deb     sudo apt install ./markmirror_2.1.0_amd64.deb     Remove: sudo apt remove markmirror
+#   build/bin/markmirror-2.1.0-1.x86_64.rpm  sudo dnf install ./markmirror-2.1.0-1.x86_64.rpm  Remove: sudo dnf remove markmirror
+
+name: markmirror
+version: ${VERSION}          # X.Y.Z, without the "v" of the tag
+arch: ${ARCH}                # amd64 | arm64
+platform: linux
+section: editors
+priority: optional
+maintainer: alexis-82 <alessioabrugiati@gmail.com>
+homepage: https://github.com/alexis-82/markmirror
+license: MIT
+description: |
+  Markdown editor with live preview.
+  Editor Markdown con anteprima in tempo reale.
+
+# Built with -tags webkit2_41 (GTK 3 + WebKitGTK 4.1)
+depends:
+  - libgtk-3-0
+  - libwebkit2gtk-4.1-0
+
+# Fedora names the same libraries differently (Fedora 40+: glibc of the
+# Ubuntu 24.04 build machine, webkit2gtk 4.1)
+overrides:
+  rpm:
+    depends:
+      - gtk3
+      - webkit2gtk4.1
+
+contents:
+  - src: build/bin/MarkMirror
+    dst: /usr/bin/markmirror
+    file_info:
+      mode: 0755
+  - src: build/linux/markmirror-launch.sh
+    dst: /usr/bin/markmirror-launch
+    file_info:
+      mode: 0755
+  # Installs updates as root (run by the app through pkexec)
+  - src: build/linux/markmirror-update.sh
+    dst: /usr/bin/markmirror-update.sh
+    file_info:
+      mode: 0755
+  - src: build/linux/markmirror.desktop
+    dst: /usr/share/applications/markmirror.desktop
+    file_info:
+      mode: 0644
+  - src: build/appicon.png
+    dst: /usr/share/pixmaps/markmirror.png
+    file_info:
+      mode: 0644
+  - src: build/appicon.png
+    dst: /usr/share/icons/hicolor/512x512/apps/markmirror.png
+    file_info:
+      mode: 0644
+  # AppStream metadata: MarkMirror shown as an app in Discover / GNOME Software
+  - src: build/linux/io.github.alexis_82.markmirror.metainfo.xml
+    dst: /usr/share/metainfo/io.github.alexis_82.markmirror.metainfo.xml
+    file_info:
+      mode: 0644

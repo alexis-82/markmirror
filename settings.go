@@ -10,9 +10,10 @@ import (
 
 // Settings sono le preferenze persistenti dell'utente.
 type Settings struct {
-	Theme      string       `json:"theme"` // "system", "light" o "dark"
-	SyncScroll bool         `json:"syncScroll"`
-	Window     *WindowState `json:"window,omitempty"`
+	Theme        string       `json:"theme"` // "system", "light" o "dark"
+	SyncScroll   bool         `json:"syncScroll"`
+	CheckUpdates bool         `json:"checkUpdates"` // controllo aggiornamenti all'avvio
+	Window       *WindowState `json:"window,omitempty"`
 }
 
 // WindowState è la posizione della finestra all'ultima chiusura. X, Y,
@@ -31,7 +32,7 @@ const (
 )
 
 func defaultSettings() Settings {
-	return Settings{Theme: "system", SyncScroll: true}
+	return Settings{Theme: "system", SyncScroll: true, CheckUpdates: true}
 }
 
 func settingsPath() (string, error) {

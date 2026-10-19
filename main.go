@@ -14,6 +14,11 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
+// version è impostata dalla pipeline di release con
+// -ldflags "-X main.version=vX.Y.Z". "dev" indica una build di sviluppo,
+// alla quale non vengono proposti aggiornamenti.
+var version = "dev"
+
 func main() {
 	app := NewApp(initialFileFromArgs())
 

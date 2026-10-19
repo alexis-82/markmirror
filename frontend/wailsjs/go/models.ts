@@ -39,6 +39,7 @@ export namespace main {
 	export class Settings {
 	    theme: string;
 	    syncScroll: boolean;
+	    checkUpdates: boolean;
 	    window?: WindowState;
 	
 	    static createFrom(source: any = {}) {
@@ -49,6 +50,7 @@ export namespace main {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.theme = source["theme"];
 	        this.syncScroll = source["syncScroll"];
+	        this.checkUpdates = source["checkUpdates"];
 	        this.window = this.convertValues(source["window"], WindowState);
 	    }
 	
@@ -69,6 +71,30 @@ export namespace main {
 		    }
 		    return a;
 		}
+	}
+	export class UpdateInfo {
+	    current: string;
+	    latest: string;
+	    available: boolean;
+	    canInstall: boolean;
+	    noRelease: boolean;
+	    dev: boolean;
+	    notes: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new UpdateInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.current = source["current"];
+	        this.latest = source["latest"];
+	        this.available = source["available"];
+	        this.canInstall = source["canInstall"];
+	        this.noRelease = source["noRelease"];
+	        this.dev = source["dev"];
+	        this.notes = source["notes"];
+	    }
 	}
 
 }

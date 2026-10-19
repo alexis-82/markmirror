@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/menu/keys"
@@ -70,11 +71,16 @@ func (a *App) buildMenu() *menu.Menu {
 		checked := cd.MenuItem.Checked
 		a.updateSettings(func(s *Settings) { s.SyncScroll = checked })
 	})
+	options.AddCheckbox("Controlla aggiornamenti all'avvio", current.CheckUpdates, nil, func(cd *menu.CallbackData) {
+		checked := cd.MenuItem.Checked
+		a.updateSettings(func(s *Settings) { s.CheckUpdates = checked })
+	})
 
 	help := m.AddSubmenu("Aiuto")
 	help.AddText("Guida Markdown", nil, a.emitter("menu:guide"))
 	help.AddSeparator()
 	help.AddText("Donazione", nil, func(*menu.CallbackData) { a.showDonate() })
+	help.AddText("Verifica aggiornamenti", nil, a.emitter("menu:check-updates"))
 	help.AddText("Informazioni", nil, func(*menu.CallbackData) { a.showAbout() })
 
 	return m
@@ -106,6 +112,6 @@ func (a *App) showAbout() {
 		Title: "Informazioni",
 		Message: fmt.Sprintf("%s v%s\n\n"+
 			"Editor Markdown con anteprima in tempo reale.\n\n"+
-			"Sviluppato da Alessio Abrugiati\n%s", appName, appVersion, websiteURL),
+			"Sviluppato da Alessio Abrugiati\n%s", appName, strings.TrimPrefix(version, "v"), websiteURL),
 	})
 }

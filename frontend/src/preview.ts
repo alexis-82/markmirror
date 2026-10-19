@@ -245,7 +245,7 @@ export class Preview {
  * Wails rifiuta in silenzio gli URL con caratteri come ( ) ~ ! (es. molte
  * pagine di Wikipedia): li codifichiamo, il browser li interpreta allo stesso modo.
  */
-function browserSafe(url: string): string {
+export function browserSafe(url: string): string {
     return url.replace(/[;|`$\\<>*{}[\]()~! ]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0'));
 }
 

@@ -8,4 +8,6 @@ if [ "${MARKMIRROR_GPU:-0}" != "1" ]; then
     export WEBKIT_DISABLE_DMABUF_RENDERER=1
 fi
 
-exec /usr/local/bin/markmirror "$@"
+# The binary sits next to this launcher: /usr/local/bin (install.sh) or
+# /usr/bin (.deb and .rpm packages).
+exec "$(dirname "$(readlink -f "$0")")/markmirror" "$@"

@@ -206,6 +206,55 @@ html, body {
     overflow: auto;
 }
 
+.dialog.update {
+    max-width: min(560px, 90vw);
+    width: 560px;
+}
+
+.dialog button:disabled {
+    opacity: .5;
+    cursor: default;
+}
+
+.update-notes {
+    max-height: 40vh;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 14px;
+    margin-bottom: 16px;
+}
+
+.update-notes:empty {
+    display: none;
+}
+
+.dialog p.update-muted {
+    color: var(--fg-muted);
+    margin-bottom: 12px;
+}
+
+.dialog p.update-error {
+    color: var(--hl-keyword);
+    margin-bottom: 12px;
+}
+
+.update-progress {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--bg-chrome);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.update-bar {
+    height: 100%;
+    width: 0;
+    background: var(--accent);
+    transition: width .2s;
+}
+
 /* ---- Stampa / PDF: solo l'anteprima, a tutta pagina ---- */
 
 @media print {

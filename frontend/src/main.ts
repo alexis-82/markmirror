@@ -4,6 +4,7 @@ import {createEditor, edit, EditCommand, format, FormatCommand, insertImage, rep
 import {Preview, renderStatic} from './preview';
 import {GUIDE, WELCOME} from './content';
 import {buildHtml} from './export';
+import {checkUpdatesAtStartup, initUpdates, isUpdating} from './update';
 import {
     ExportHTML, GetSettings, ImageLink, InitialFile, NewFile, OpenFile, OpenPath, PickImage, Quit, ReloadFile, SaveFile, SaveFileAs, SetModified,
 } from '../wailsjs/go/main/App';
@@ -289,9 +290,19 @@ for (const [event, task] of Object.entries(fileCommands)) {
     EventsOn(event, () => exclusive(task));
 }
 
+// Durante un aggiornamento il documento non deve cambiare: l'app si chiude
+// senza chiedere conferma appena parte l'installazione.
 for (const cmd of ['undo', 'redo', 'cut', 'copy', 'paste', 'select-all'] as EditCommand[]) {
-    EventsOn(`menu:${cmd}`, () => edit(view, cmd));
+    EventsOn(`menu:${cmd}`, () => {
+        if (!isUpdating()) edit(view, cmd);
+    });
 }
+
+initUpdates({
+    exclusive,
+    confirmDiscard,
+    showMessage: (title, message) => showDialog(title, message, [{id: 'ok', label: 'OK', primary: true}]),
+});
 
 EventsOn('menu:guide', () => $<HTMLDialogElement>('guide').showModal());
 
@@ -391,6 +402,8 @@ async function start(): Promise<void> {
     initDivider();
     renderStatic($('guide-body'), GUIDE);
     applySettings(await GetSettings());
+    // Senza await: non ritarda l'apertura del documento.
+    checkUpdatesAtStartup(settings.checkUpdates);
     try {
         const initial = await InitialFile();
         if (initial) {

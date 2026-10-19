@@ -12,9 +12,8 @@ import (
 )
 
 const (
-	appName    = "MarkMirror"
-	appVersion = "2.0.0"
-	bom        = "\xef\xbb\xbf" // BOM UTF-8
+	appName = "MarkMirror"
+	bom     = "\xef\xbb\xbf" // BOM UTF-8
 )
 
 var markdownFilters = []runtime.FileFilter{
@@ -44,10 +43,14 @@ type App struct {
 	quitting    bool
 	initialFile string
 	settings    Settings
+
+	updates updater
 }
 
 func NewApp(initialFile string) *App {
-	return &App{initialFile: initialFile, settings: loadSettings()}
+	a := &App{initialFile: initialFile, settings: loadSettings()}
+	a.updates = newUpdater(a)
+	return a
 }
 
 func (a *App) startup(ctx context.Context) {
@@ -56,6 +59,7 @@ func (a *App) startup(ctx context.Context) {
 	a.applyWindowTheme()
 	a.updateTitle()
 	go a.watchFile()
+	go a.cleanupUpdates()
 }
 
 // beforeClose blocca la chiusura se ci sono modifiche non salvate e chiede

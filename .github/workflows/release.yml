@@ -1,0 +1,223 @@
+# Release di MarkMirror: parte quando si pubblica un tag vX.Y.Z.
+#   test -> build Windows + build Linux (in parallelo) -> GitHub Release
+# I nomi dei file sono quelli di update.AssetNames (internal/update/update.go):
+# l'aggiornamento dall'app li cerca esattamente così.
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+jobs:
+  # 1. Niente release se il tag non è vX.Y.Z o se un test fallisce
+  test:
+    name: Test
+    runs-on: ubuntu-24.04
+    steps:
+      # Un tag come v2.1.0-rc verrebbe pubblicato come release stabile e
+      # proposto a tutti gli utenti: solo versioni definitive.
+      - name: Formato del tag
+        run: |
+          if ! printf '%s' "$GITHUB_REF_NAME" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::tag $GITHUB_REF_NAME non valido: atteso vX.Y.Z"
+            exit 1
+          fi
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Dipendenze di sistema Wails
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
+      - name: Frontend (build)
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+      - run: go test -tags webkit2_41 ./...
+
+  # 2a. Windows: setup NSIS + eseguibile portable
+  build-windows:
+    name: Build Windows
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Installa Wails CLI e NSIS
+        run: |
+          go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0
+          choco install nsis -y --no-progress
+      - name: Build
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"          # es. v2.1.0
+          $ver = $tag.TrimStart("v")               # es. 2.1.0
+          # Versione del tag nei metadati dell'exe
+          $cfg = Get-Content wails.json -Raw | ConvertFrom-Json
+          $cfg.info.productVersion = $ver
+          $cfg | ConvertTo-Json -Depth 10 | Set-Content wails.json -Encoding utf8NoBOM
+          wails build -ldflags "-X main.version=$tag"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          # Setup autonomo (lingua, collegamenti, per utente): produce
+          # build\bin\MarkMirror-<ver>-amd64-installer.exe
+          & "C:\Program Files (x86)\NSIS\makensis.exe" /DVERSION=$ver build\windows\installer\markmirror.nsi
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item build\bin\MarkMirror.exe "build\bin\MarkMirror-$ver-amd64-portable.exe"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: windows
+          path: |
+            build/bin/*-installer.exe
+            build/bin/*-portable.exe
+          if-no-files-found: error
+
+  # 2b. Linux: tar.gz (install.sh / markmirror-update.sh), .deb e .rpm
+  build-linux:
+    name: Build Linux
+    needs: test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Dipendenze di sistema Wails
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
+      - name: Installa Wails CLI e nfpm
+        # nfpm richiede un Go più recente di go.mod: lo scarica solo per questi strumenti
+        env:
+          GOTOOLCHAIN: auto
+        run: |
+          go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0
+          go install github.com/goreleaser/nfpm/v2/cmd/nfpm@v2.48.0
+      # Versione del tag nei metadati AppStream (il file nel repo non ne ha),
+      # poi convalida: metadati non validi = niente release
+      - name: Metadati AppStream
+        run: |
+          sudo apt-get install -y appstream desktop-file-utils
+          sh build/linux/metainfo-release.sh build/linux/io.github.alexis_82.markmirror.metainfo.xml "${GITHUB_REF_NAME#v}" "$(date -u +%F)"
+          desktop-file-validate build/linux/markmirror.desktop
+          appstreamcli validate --no-net build/linux/io.github.alexis_82.markmirror.metainfo.xml
+      - name: Build + pacchetti (.tar.gz, .deb e .rpm)
+        run: |
+          export VERSION="${GITHUB_REF_NAME#v}"
+          wails build -tags webkit2_41 -ldflags "-X main.version=${{ github.ref_name }}"
+          sh build/linux/package.sh
+          tar -tzf build/bin/MarkMirror-*-linux-amd64.tar.gz
+          ARCH=amd64 nfpm pkg --config build/linux/nfpm.yaml --packager deb --target build/bin/
+          dpkg-deb --info build/bin/markmirror_*_amd64.deb
+          dpkg-deb --contents build/bin/markmirror_*_amd64.deb
+          ARCH=amd64 nfpm pkg --config build/linux/nfpm.yaml --packager rpm --target build/bin/
+      # Installa davvero l'.rpm: Fedora 40 è il minimo (glibc della build
+      # Ubuntu 24.04), l'ultima Fedora usa dnf5. Niente release se fallisce.
+      - name: Verifica .rpm su Fedora
+        run: |
+          for img in fedora:40 fedora:latest; do
+            echo "::group::$img"
+            docker run --rm -e VERSION="${GITHUB_REF_NAME#v}" -v "$PWD/build/bin:/pkg:ro" "$img" sh -euc '
+              rpm -qpi /pkg/markmirror-*.rpm
+              rpm -qpR /pkg/markmirror-*.rpm
+              rpm -qpl /pkg/markmirror-*.rpm
+              rpm -qpi /pkg/markmirror-*.rpm | grep -Eq "^License +: MIT$"
+              if rpm -qpR /pkg/markmirror-*.rpm | grep -E "libgtk-3-0|libwebkit2gtk-4.1-0"; then
+                echo "dipendenze Debian nel pacchetto rpm" >&2; exit 1
+              fi
+              dnf install -y /pkg/markmirror-*.rpm
+              test "$(rpm -qf --qf "%{NAME}" /usr/bin/markmirror)" = markmirror
+              test -x /usr/bin/markmirror-update.sh
+              test -x /usr/bin/markmirror-launch
+              if ldd /usr/bin/markmirror 2>&1 | grep "not found"; then
+                echo "librerie mancanti per /usr/bin/markmirror" >&2; exit 1
+              fi
+              # AppStream: quello che legge Discover (nome, sviluppatore, pacchetto)
+              M=/usr/share/metainfo/io.github.alexis_82.markmirror.metainfo.xml
+              grep -q "<release version=\"$VERSION\"" "$M"
+              dnf install -y appstream
+              appstreamcli refresh-cache --force
+              appstreamcli get io.github.alexis_82.markmirror --details | tee /tmp/appstream.txt
+              grep -Eiq "^ *name: *markmirror$" /tmp/appstream.txt
+              grep -Eiq "^ *developer[^:]*: *alexis-82$" /tmp/appstream.txt
+              grep -Eiq "^ *package[^:]*: *markmirror$" /tmp/appstream.txt
+            '
+            echo "::endgroup::"
+          done
+      - uses: actions/upload-artifact@v7
+        with:
+          name: linux
+          path: |
+            build/bin/MarkMirror-*-linux-*.tar.gz
+            build/bin/markmirror_*.deb
+            build/bin/markmirror-*.rpm
+          if-no-files-found: error
+
+  # 3. Raccoglie i file, controlla i nomi, calcola i checksum e pubblica la release
+  release:
+    name: GitHub Release
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write  # serve per creare la release
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0  # storia completa e tag, per le note di rilascio
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true
+      # Esattamente i file che l'updater cerca (update.AssetNames)
+      - name: Nomi dei file
+        working-directory: dist
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          printf '%s\n' \
+            "MarkMirror-$V-amd64-installer.exe" \
+            "MarkMirror-$V-amd64-portable.exe" \
+            "MarkMirror-$V-linux-amd64.tar.gz" \
+            "markmirror-$V-1.x86_64.rpm" \
+            "markmirror_${V}_amd64.deb" | LC_ALL=C sort > /tmp/expected
+          ls -1 | LC_ALL=C sort > /tmp/actual
+          diff /tmp/expected /tmp/actual
+      - name: Checksum SHA-256
+        working-directory: dist
+        run: sha256sum * > SHA256SUMS.txt
+      # Note = elenco dei commit dal tag precedente. MarkMirror le mostra
+      # all'utente nella finestra di aggiornamento.
+      - name: Note di rilascio
+        run: |
+          prev=$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)
+          range=${prev:+$prev..}$GITHUB_REF_NAME
+          { echo "## Novità"; echo; git log --no-merges --pretty='- %s' "$range"; } > notes.md
+          cat notes.md
+      - name: Crea la release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --title "MarkMirror $GITHUB_REF_NAME" \
+            --notes-file notes.md \
+            --verify-tag

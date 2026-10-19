@@ -6,7 +6,9 @@
 set -e
 
 FILES="/usr/local/bin/markmirror
+/usr/local/bin/markmirror-launch
 /usr/local/bin/markmirror-launch.sh
+/usr/local/bin/markmirror-update.sh
 /usr/share/applications/markmirror.desktop
 /usr/share/pixmaps/markmirror.png"
 
@@ -28,7 +30,10 @@ if [ ! -f build/bin/MarkMirror ]; then
 fi
 
 install -m 0755 build/bin/MarkMirror /usr/local/bin/markmirror
-install -m 0755 build/linux/markmirror-launch.sh /usr/local/bin/markmirror-launch.sh
+install -m 0755 build/linux/markmirror-launch.sh /usr/local/bin/markmirror-launch
+# Previous launcher name: kept as a link for menu entries of older versions.
+ln -sf markmirror-launch /usr/local/bin/markmirror-launch.sh
+install -m 0755 build/linux/markmirror-update.sh /usr/local/bin/markmirror-update.sh
 install -m 0644 build/linux/markmirror.desktop /usr/share/applications/markmirror.desktop
 install -m 0644 build/appicon.png /usr/share/pixmaps/markmirror.png
 refresh_menus

@@ -28,6 +28,16 @@ func TestParseSettings(t *testing.T) {
 	}
 }
 
+func TestParseSettingsCheckUpdates(t *testing.T) {
+	// File di una versione precedente all'updater: controllo attivo.
+	if s := parseSettings([]byte(`{"theme":"dark"}`)); !s.CheckUpdates {
+		t.Errorf("missing key: CheckUpdates = false, want true")
+	}
+	if s := parseSettings([]byte(`{"checkUpdates":false}`)); s.CheckUpdates {
+		t.Errorf("checkUpdates false: CheckUpdates = true")
+	}
+}
+
 func TestSettingsRoundTrip(t *testing.T) {
 	in := defaultSettings()
 	in.Window = &WindowState{X: 100, Y: 80, Width: 1300, Height: 900, Maximised: true}
