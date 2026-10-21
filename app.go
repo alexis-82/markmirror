@@ -263,15 +263,22 @@ func (a *App) updateTitle() {
 		return
 	}
 	a.mu.Lock()
+	title := windowTitle(a.currentFile, a.modified)
+	a.mu.Unlock()
+	runtime.WindowSetTitle(a.ctx, title)
+}
+
+// windowTitle compone il titolo della finestra: percorso completo del
+// documento (o "Senza titolo"), "*" in testa se ci sono modifiche non salvate.
+func windowTitle(file string, modified bool) string {
 	name := "Senza titolo"
-	if a.currentFile != "" {
-		name = filepath.Base(a.currentFile)
+	if file != "" {
+		name = file
 	}
-	if a.modified {
+	if modified {
 		name = "*" + name
 	}
-	a.mu.Unlock()
-	runtime.WindowSetTitle(a.ctx, name+" - "+appName)
+	return name + " - " + appName
 }
 
 // docDir restituisce la cartella del documento corrente, o "" se non salvato.
