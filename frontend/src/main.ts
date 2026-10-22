@@ -5,6 +5,7 @@ import {Preview, renderStatic} from './preview';
 import {GUIDE, WELCOME} from './content';
 import {buildHtml} from './export';
 import {checkUpdatesAtStartup, initUpdates, isUpdating} from './update';
+import {initGit, refreshGit} from './git';
 import {
     ExportHTML, GetSettings, ImageLink, InitialFile, NewFile, OpenFile, OpenPath, PickImage, Quit, ReloadFile, SaveFile, SaveFileAs, SetModified,
 } from '../wailsjs/go/main/App';
@@ -97,6 +98,7 @@ function loadDocument(content: string, path: string): void {
     preview.update('', ''); // svuota: i percorsi relativi cambiano base
     renderNow();
     $('preview').scrollTop = 0;
+    refreshGit();
 }
 
 // ---- Dialoghi ---------------------------------------------------------------
@@ -174,8 +176,12 @@ async function save(as: boolean): Promise<boolean> {
     modified = false;
     // Se nel frattempo il testo è cambiato, il documento resta modificato.
     setModified(view.state.doc.toString() !== content);
-    if (pathChanged) renderNow();
-    else updateStats();
+    if (pathChanged) {
+        renderNow();
+        refreshGit();
+    } else {
+        updateStats();
+    }
     return true;
 }
 
@@ -302,6 +308,18 @@ initUpdates({
     exclusive,
     confirmDiscard,
     showMessage: (title, message) => showDialog(title, message, [{id: 'ok', label: 'OK', primary: true}]),
+});
+
+initGit({
+    exclusive,
+    currentPath: () => currentPath,
+    isModified: () => modified,
+    save: () => save(false),
+    showMessage: (title, message) => showDialog(title, message, [{id: 'ok', label: 'OK', primary: true}]),
+    confirm: async (title, message, okLabel) => (await showDialog(title, message, [
+        {id: 'ok', label: okLabel, primary: true},
+        {id: 'cancel', label: 'Annulla'},
+    ])) === 'ok',
 });
 
 EventsOn('menu:guide', () => $<HTMLDialogElement>('guide').showModal());

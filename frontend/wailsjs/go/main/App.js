@@ -18,6 +18,22 @@ export function GetVersion() {
   return window['go']['main']['App']['GetVersion']();
 }
 
+export function GitCommit(arg1) {
+  return window['go']['main']['App']['GitCommit'](arg1);
+}
+
+export function GitHasChanges() {
+  return window['go']['main']['App']['GitHasChanges']();
+}
+
+export function GitPush() {
+  return window['go']['main']['App']['GitPush']();
+}
+
+export function GitStatus() {
+  return window['go']['main']['App']['GitStatus']();
+}
+
 export function ImageLink(arg1) {
   return window['go']['main']['App']['ImageLink'](arg1);
 }

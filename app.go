@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -45,6 +46,7 @@ type App struct {
 	settings    Settings
 
 	updates updater
+	gitItem *menu.MenuItem // "Commit e push", abilitata solo dentro un repo
 }
 
 func NewApp(initialFile string) *App {

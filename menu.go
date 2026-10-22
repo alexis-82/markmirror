@@ -34,6 +34,9 @@ func (a *App) buildMenu() *menu.Menu {
 	file.AddText("Salva", keys.CmdOrCtrl("s"), a.emitter("menu:save"))
 	file.AddText("Salva come...", keys.Combo("s", keys.CmdOrCtrlKey, keys.ShiftKey), a.emitter("menu:save-as"))
 	file.AddSeparator()
+	a.gitItem = file.AddText("Commit e push...", keys.Combo("g", keys.CmdOrCtrlKey, keys.ShiftKey), a.emitter("menu:git-commit"))
+	a.gitItem.Disabled = true
+	file.AddSeparator()
 	export := file.AddSubmenu("Esporta")
 	export.AddText("HTML...", nil, a.emitter("menu:export-html"))
 	export.AddText("PDF / Stampa...", keys.CmdOrCtrl("p"), a.emitter("menu:export-pdf"))

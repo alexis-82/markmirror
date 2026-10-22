@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-10-22
+
+### Added
+- File → "Commit e push..." (Ctrl+Shift+G) and a toolbar button, shown when the open file is inside a Git repository: commits only the open file with a message of your choice, then pushes it to the remote.
+- Unsaved changes are saved before committing; if the file has nothing to commit, a push-only option is offered.
+- Branches without an upstream are pushed to the repository's remote and set to track it.
+
 ## [2.2.0] - 2026-10-21
 
 ### Changed

@@ -22,6 +22,7 @@ Editor Markdown per Windows e Linux con anteprima in tempo reale: scrivi a sinis
 - Apertura diretta di un file `.md` con doppio clic o con "Apri con → MarkMirror"
 - Percorso completo del file nel titolo della finestra, per distinguere file con lo stesso nome in cartelle diverse
 - Aggiornamenti dall'app: Aiuto → Verifica aggiornamenti, più un controllo automatico all'avvio
+- Commit e push del file aperto (File → Commit e push, Ctrl+Shift+G, o pulsante nella barra degli strumenti) quando il file si trova in un repository Git; richiede Git installato
 
 ## Download
 

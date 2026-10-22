@@ -10,6 +10,14 @@ export function GetSettings():Promise<main.Settings>;
 
 export function GetVersion():Promise<string>;
 
+export function GitCommit(arg1:string):Promise<void>;
+
+export function GitHasChanges():Promise<boolean>;
+
+export function GitPush():Promise<void>;
+
+export function GitStatus():Promise<main.GitInfo>;
+
 export function ImageLink(arg1:string):Promise<string>;
 
 export function InitialFile():Promise<main.FileResult>;
