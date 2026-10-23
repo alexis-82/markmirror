@@ -39,7 +39,7 @@ export function initGit(d: GitDeps): void {
     });
 }
 
-/** Aggiorna il repository del documento corrente e mostra o nasconde il pulsante. */
+/** Aggiorna il repository del documento corrente e abilita o disabilita il pulsante. */
 export async function refreshGit(): Promise<void> {
     const id = ++request;
     let next: main.GitInfo;
@@ -50,7 +50,16 @@ export async function refreshGit(): Promise<void> {
     }
     if (id !== request) return; // nel frattempo è cambiato documento
     info = next;
-    $('git-commit').hidden = !info.repo;
+    updateButton();
+}
+
+/** Il pulsante resta sempre visibile, abilitato solo dentro un repository. */
+function updateButton(): void {
+    const button = $<HTMLButtonElement>('git-commit');
+    button.disabled = !info.repo;
+    button.title = info.repo
+        ? 'Commit del solo file aperto e push (Ctrl+Shift+G)'
+        : 'Disponibile solo per file in un repository Git';
 }
 
 async function commitAndPush(): Promise<void> {
@@ -109,6 +118,6 @@ async function running(label: string, task: () => Promise<void>): Promise<void> 
         await task();
     } finally {
         button.textContent = BUTTON_LABEL;
-        button.disabled = false;
+        updateButton();
     }
 }
