@@ -15,9 +15,10 @@ import (
 	"markmirror-go/internal/update"
 )
 
-// MarkMirror si installa su Linux in tre modi:
+// MarkMirror si installa su Linux in quattro modi:
 //   - pacchetto .deb (nfpm): /usr/bin/markmirror, aggiornato con apt;
 //   - pacchetto .rpm (nfpm, Fedora): /usr/bin/markmirror, aggiornato con dnf;
+//   - pacchetto .pkg.tar.zst (nfpm, Arch Linux): /usr/bin/markmirror, aggiornato con pacman;
 //   - build/linux/install.sh: /usr/local/bin/markmirror.
 //
 // In tutti i casi l'installazione come root passa da markmirror-update.sh,
@@ -42,15 +43,26 @@ func installedFromDeb() bool {
 // installedFromRpm indica se il binario in esecuzione appartiene al
 // pacchetto rpm "markmirror", chiedendolo al database rpm.
 func installedFromRpm() bool {
-	return ownedByRpm(runningExecutable(), func(path string) (string, error) {
+	return ownedByPackage(runningExecutable(), func(path string) (string, error) {
 		out, err := exec.Command("rpm", "-qf", "--qf", "%{NAME}", path).Output()
 		return string(out), err
 	})
 }
 
-// ownedByRpm è installedFromRpm con la query rpm passata da fuori, per i
-// test. Senza rpm, o con un file di nessun pacchetto (rpm esce con 1): false.
-func ownedByRpm(exe string, query func(path string) (string, error)) bool {
+// installedFromPacman indica se il binario in esecuzione appartiene al
+// pacchetto Arch Linux "markmirror", chiedendolo al database di pacman.
+func installedFromPacman() bool {
+	return ownedByPackage(runningExecutable(), func(path string) (string, error) {
+		out, err := exec.Command("pacman", "-Qqo", path).Output()
+		return string(out), err
+	})
+}
+
+// ownedByPackage indica se exe è il binario dei pacchetti e la query al
+// gestore dei pacchetti (passata da fuori, per i test) dice che appartiene a
+// "markmirror". Senza gestore, o con un file di nessun pacchetto (rpm e
+// pacman escono con 1): false.
+func ownedByPackage(exe string, query func(path string) (string, error)) bool {
 	if exe != pkgBinary {
 		return false
 	}
@@ -77,6 +89,9 @@ func platformAsset(assets []update.Asset, version string) (update.Asset, error) 
 	}
 	if installedFromRpm() {
 		return update.PickRpm(assets, version, goruntime.GOARCH)
+	}
+	if installedFromPacman() {
+		return update.PickPacman(assets, version, goruntime.GOARCH)
 	}
 	return update.PickAsset(assets, version, "linux", goruntime.GOARCH)
 }

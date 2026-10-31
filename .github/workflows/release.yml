@@ -122,7 +122,7 @@ jobs:
           sh build/linux/metainfo-release.sh build/linux/io.github.alexis_82.markmirror.metainfo.xml "${GITHUB_REF_NAME#v}" "$(date -u +%F)"
           desktop-file-validate build/linux/markmirror.desktop
           appstreamcli validate --no-net build/linux/io.github.alexis_82.markmirror.metainfo.xml
-      - name: Build + pacchetti (.tar.gz, .deb e .rpm)
+      - name: Build + pacchetti (.tar.gz, .deb, .rpm e Arch Linux)
         run: |
           export VERSION="${GITHUB_REF_NAME#v}"
           wails build -tags webkit2_41 -ldflags "-X main.version=${{ github.ref_name }}"
@@ -132,6 +132,7 @@ jobs:
           dpkg-deb --info build/bin/markmirror_*_amd64.deb
           dpkg-deb --contents build/bin/markmirror_*_amd64.deb
           ARCH=amd64 nfpm pkg --config build/linux/nfpm.yaml --packager rpm --target build/bin/
+          ARCH=amd64 nfpm pkg --config build/linux/nfpm.yaml --packager archlinux --target build/bin/
       # Installa davvero l'.rpm: Fedora 40 è il minimo (glibc della build
       # Ubuntu 24.04), l'ultima Fedora usa dnf5. Niente release se fallisce.
       - name: Verifica .rpm su Fedora
@@ -165,6 +166,30 @@ jobs:
             '
             echo "::endgroup::"
           done
+      # Installa davvero il pacchetto Arch con pacman (dipendenze dai
+      # repository ufficiali). Niente release se fallisce.
+      - name: Verifica pacchetto Arch Linux
+        run: |
+          docker run --rm -e VERSION="${GITHUB_REF_NAME#v}" -v "$PWD/build/bin:/pkg:ro" archlinux:latest sh -euc '
+            P=/pkg/markmirror-$VERSION-1-x86_64.pkg.tar.zst
+            pacman -Qip "$P"
+            pacman -Qlp "$P"
+            pacman -Qip "$P" | grep -Eq "^Licen[sz]e[^:]*: *MIT$"
+            if pacman -Qip "$P" | grep -E "libgtk-3-0|libwebkit2gtk-4.1-0|webkit2gtk4.1"; then
+              echo "dipendenze Debian/Fedora nel pacchetto Arch" >&2; exit 1
+            fi
+            # La sandbox dei download di pacman non funziona in tutti i container
+            pacman -Syu --noconfirm --disable-sandbox
+            pacman -U --noconfirm --disable-sandbox "$P"
+            test "$(pacman -Qqo /usr/bin/markmirror)" = markmirror
+            test -x /usr/bin/markmirror-update.sh
+            test -x /usr/bin/markmirror-launch
+            if ldd /usr/bin/markmirror 2>&1 | grep "not found"; then
+              echo "librerie mancanti per /usr/bin/markmirror" >&2; exit 1
+            fi
+            M=/usr/share/metainfo/io.github.alexis_82.markmirror.metainfo.xml
+            grep -q "<release version=\"$VERSION\"" "$M"
+          '
       - uses: actions/upload-artifact@v7
         with:
           name: linux
@@ -172,6 +197,7 @@ jobs:
             build/bin/MarkMirror-*-linux-*.tar.gz
             build/bin/markmirror_*.deb
             build/bin/markmirror-*.rpm
+            build/bin/markmirror-*.pkg.tar.zst
           if-no-files-found: error
 
   # 3. Raccoglie i file, controlla i nomi, calcola i checksum e pubblica la release
@@ -199,6 +225,7 @@ jobs:
             "MarkMirror-$V-amd64-portable.exe" \
             "MarkMirror-$V-linux-amd64.tar.gz" \
             "markmirror-$V-1.x86_64.rpm" \
+            "markmirror-$V-1-x86_64.pkg.tar.zst" \
             "markmirror_${V}_amd64.deb" | LC_ALL=C sort > /tmp/expected
           ls -1 | LC_ALL=C sort > /tmp/actual
           diff /tmp/expected /tmp/actual

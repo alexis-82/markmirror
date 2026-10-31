@@ -34,6 +34,7 @@ Scarica l'ultima versione dalla pagina [Releases](https://github.com/alexis-82/m
 | Windows (portable, senza installazione) | `MarkMirror-<ver>-amd64-portable.exe` |
 | Debian / Ubuntu e derivate | `markmirror_<ver>_amd64.deb` |
 | Fedora | `markmirror-<ver>-1.x86_64.rpm` |
+| Arch Linux e derivate (Manjaro, EndeavourOS, CachyOS) | `markmirror-<ver>-1-x86_64.pkg.tar.zst` |
 | Altre distribuzioni Linux | `MarkMirror-<ver>-linux-amd64.tar.gz` |
 
 Il file `SHA256SUMS.txt` contiene i checksum per verificare i download.
@@ -63,6 +64,12 @@ sudo apt install ./markmirror_<ver>_amd64.deb
 sudo dnf install ./markmirror-<ver>-1.x86_64.rpm
 ```
 
+### Arch Linux
+
+```sh
+sudo pacman -U ./markmirror-<ver>-1-x86_64.pkg.tar.zst
+```
+
 ### Altre distribuzioni Linux
 
 Estrai l'archivio ed entra nella cartella estratta, poi:
@@ -80,7 +87,7 @@ Dopo l'installazione trovi MarkMirror nel menu delle applicazioni, e puoi aprire
 - **Aiuto → Verifica aggiornamenti** controlla se c'è una versione più recente. Se c'è, mostra le novità e la installa con "Scarica e installa". Prima di installare, il file scaricato viene verificato. Se il documento ha modifiche non salvate, MarkMirror chiede prima se salvarle.
 - All'avvio il controllo avviene da solo e non mostra nulla se non c'è niente di nuovo. Si disattiva da **Opzioni → Controlla aggiornamenti all'avvio**.
 - **Windows**: parte il setup della nuova versione, anche se usi la versione portable.
-- **Linux**: viene chiesta la password di amministratore, poi la nuova versione viene installata nello stesso modo dell'attuale (deb, rpm o archivio) e MarkMirror si riavvia. Da terminale si può aggiornare anche con:
+- **Linux**: viene chiesta la password di amministratore, poi la nuova versione viene installata nello stesso modo dell'attuale (deb, rpm, pacchetto Arch o archivio) e MarkMirror si riavvia. Da terminale si può aggiornare anche con:
   ```sh
   sudo markmirror-update.sh
   ```
@@ -92,6 +99,7 @@ La versione 2.0.0 non ha questa funzione: per passare a una versione successiva 
 - **Windows**: Impostazioni → App installate → MarkMirror → Disinstalla. Puoi scegliere se eliminare anche le impostazioni; i tuoi documenti non vengono mai toccati.
 - **Debian / Ubuntu**: `sudo apt remove markmirror`
 - **Fedora**: `sudo dnf remove markmirror`
+- **Arch Linux**: `sudo pacman -R markmirror`
 - **Altre distribuzioni Linux**: dalla cartella dell'archivio estratto, `sudo sh build/linux/install.sh --uninstall`
 
 Licenza MIT — © Alessio Abrugiati

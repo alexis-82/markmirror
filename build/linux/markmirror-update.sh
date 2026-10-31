@@ -4,7 +4,7 @@
 #   sudo markmirror-update.sh                  download the latest GitHub release (.tar.gz),
 #                                              verify it with SHA256SUMS.txt and install it
 #   sudo markmirror-update.sh FILE SHA256      install a release file already downloaded
-#                                              (.deb, .rpm or .tar.gz) after checking its SHA-256
+#                                              (.deb, .rpm, .pkg.tar.zst or .tar.gz) after checking its SHA-256
 #   sudo markmirror-update.sh FILE             same, without checksum (prints a warning)
 #
 # MarkMirror runs it through pkexec with the file it has downloaded and its
@@ -93,6 +93,14 @@ case "$NAME" in
             exit 1
         fi
         dnf install -y "$FILE"
+        ;;
+    *.pkg.tar.zst)
+        if ! command -v pacman >/dev/null 2>&1; then
+            echo "pacman not found: install $NAME with your package manager" >&2
+            exit 1
+        fi
+        # pacman -U also installs any new dependency from the repositories.
+        pacman -U --noconfirm "$FILE"
         ;;
     *.tar.gz)
         mkdir "$WORK/pkg"

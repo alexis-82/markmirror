@@ -167,6 +167,7 @@ type Names struct {
 	LinuxTarball     string
 	Deb              string
 	Rpm              string
+	Pacman           string
 }
 
 // rpmArch converte le architetture Go nei nomi usati da rpm (e da nfpm).
@@ -182,6 +183,7 @@ func AssetNames(version, goarch string) Names {
 		LinuxTarball:     "MarkMirror-" + v + "-linux-" + goarch + ".tar.gz",
 		Deb:              "markmirror_" + v + "_" + goarch + ".deb",
 		Rpm:              "markmirror-" + v + "-1." + rpmArch[goarch] + ".rpm",
+		Pacman:           "markmirror-" + v + "-1-" + rpmArch[goarch] + ".pkg.tar.zst",
 	}
 }
 
@@ -218,6 +220,15 @@ func PickRpm(assets []Asset, version, goarch string) (Asset, error) {
 		return Asset{}, ErrNoAsset
 	}
 	return pick(assets, AssetNames(version, goarch).Rpm)
+}
+
+// PickPacman restituisce il pacchetto Arch Linux per goarch (stessi nomi di
+// architettura di rpm).
+func PickPacman(assets []Asset, version, goarch string) (Asset, error) {
+	if _, ok := rpmArch[goarch]; !ok {
+		return Asset{}, ErrNoAsset
+	}
+	return pick(assets, AssetNames(version, goarch).Pacman)
 }
 
 // Download salva il file in una nuova cartella temporanea privata e ne

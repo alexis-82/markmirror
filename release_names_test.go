@@ -27,7 +27,7 @@ func TestReleaseWorkflowExpectsAssetNames(t *testing.T) {
 	// Elenco controllato dal passo "Nomi dei file", con $V = versione.
 	expanded := strings.NewReplacer("${V}", "2.1.0", "$V", "2.1.0").Replace(wf)
 	n := update.AssetNames("v2.1.0", "amd64")
-	for _, name := range []string{n.WindowsInstaller, n.WindowsPortable, n.LinuxTarball, n.Deb, n.Rpm} {
+	for _, name := range []string{n.WindowsInstaller, n.WindowsPortable, n.LinuxTarball, n.Deb, n.Rpm, n.Pacman} {
 		if !strings.Contains(expanded, `"`+name+`"`) {
 			t.Errorf("release.yml non controlla %s", name)
 		}
@@ -77,14 +77,15 @@ func TestPackageScriptTarballName(t *testing.T) {
 
 func TestNfpmPackageName(t *testing.T) {
 	cfg := readRepoFile(t, "build/linux/nfpm.yaml")
-	// nfpm nomina i pacchetti <name>_<version>_<arch>.deb e
-	// <name>-<version>-1.<arch>.rpm: basta che il nome sia "markmirror".
+	// nfpm nomina i pacchetti <name>_<version>_<arch>.deb,
+	// <name>-<version>-1.<arch>.rpm e <name>-<version>-1-<arch>.pkg.tar.zst:
+	// basta che il nome sia "markmirror".
 	if !regexp.MustCompile(`(?m)^name: markmirror$`).MatchString(cfg) {
 		t.Error("nfpm.yaml: name diverso da markmirror")
 	}
 	n := update.AssetNames("2.1.0", "amd64")
-	if !strings.HasPrefix(n.Deb, "markmirror_") || !strings.HasPrefix(n.Rpm, "markmirror-") {
-		t.Errorf("AssetNames non segue il nome del pacchetto: %s %s", n.Deb, n.Rpm)
+	if !strings.HasPrefix(n.Deb, "markmirror_") || !strings.HasPrefix(n.Rpm, "markmirror-") || !strings.HasPrefix(n.Pacman, "markmirror-") {
+		t.Errorf("AssetNames non segue il nome del pacchetto: %s %s %s", n.Deb, n.Rpm, n.Pacman)
 	}
 	// Lo script di installazione deve stare accanto al binario anche nei pacchetti.
 	for _, dst := range []string{"dst: /usr/bin/markmirror\n", "dst: /usr/bin/markmirror-launch\n", "dst: /usr/bin/markmirror-update.sh\n"} {

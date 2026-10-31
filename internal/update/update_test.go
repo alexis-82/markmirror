@@ -47,6 +47,7 @@ func TestAssetNames(t *testing.T) {
 		LinuxTarball:     "MarkMirror-2.1.0-linux-amd64.tar.gz",
 		Deb:              "markmirror_2.1.0_amd64.deb",
 		Rpm:              "markmirror-2.1.0-1.x86_64.rpm",
+		Pacman:           "markmirror-2.1.0-1-x86_64.pkg.tar.zst",
 	}
 	for _, v := range []string{"v2.1.0", "2.1.0"} {
 		if got := AssetNames(v, "amd64"); got != want {
@@ -66,6 +67,8 @@ var release210 = []Asset{
 	{Name: "MarkMirror-2.1.0-linux-arm64.tar.gz"},
 	{Name: "markmirror_2.1.0_amd64.deb"},
 	{Name: "markmirror-2.1.0-1.x86_64.rpm"},
+	{Name: "markmirror-2.1.0-1-aarch64.pkg.tar.zst"},
+	{Name: "markmirror-2.1.0-1-x86_64.pkg.tar.zst"},
 	{Name: "SHA256SUMS.txt"},
 }
 
@@ -122,6 +125,24 @@ func TestPickRpm(t *testing.T) {
 		t.Fatalf("unknown arch: expected ErrNoAsset, got %v", err)
 	}
 	if _, err := PickRpm(release200, "v2.0.0", "amd64"); !errors.Is(err, ErrNoAsset) {
+		t.Fatalf("v2.0.0: expected ErrNoAsset, got %v", err)
+	}
+}
+
+func TestPickPacman(t *testing.T) {
+	if a, err := PickPacman(release210, "v2.1.0", "amd64"); err != nil || a.Name != "markmirror-2.1.0-1-x86_64.pkg.tar.zst" {
+		t.Fatalf("amd64: %v %v", a, err)
+	}
+	if a, err := PickPacman(release210, "v2.1.0", "arm64"); err != nil || a.Name != "markmirror-2.1.0-1-aarch64.pkg.tar.zst" {
+		t.Fatalf("arm64: %v %v", a, err)
+	}
+	if _, err := PickPacman(release210, "v2.1.0", "riscv64"); !errors.Is(err, ErrNoAsset) {
+		t.Fatalf("unknown arch: expected ErrNoAsset, got %v", err)
+	}
+	if _, err := PickPacman(release210, "v2.2.0", "amd64"); !errors.Is(err, ErrNoAsset) {
+		t.Fatalf("other version: expected ErrNoAsset, got %v", err)
+	}
+	if _, err := PickPacman(release200, "v2.0.0", "amd64"); !errors.Is(err, ErrNoAsset) {
 		t.Fatalf("v2.0.0: expected ErrNoAsset, got %v", err)
 	}
 }

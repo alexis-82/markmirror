@@ -1,13 +1,15 @@
-# Debian and Fedora packages for MarkMirror, built with nfpm (https://nfpm.goreleaser.com).
+# Debian, Fedora and Arch Linux packages for MarkMirror, built with nfpm (https://nfpm.goreleaser.com).
 # From the project root, after the Linux build:
 #
 #   wails build -tags webkit2_41 -ldflags "-X main.version=v2.1.0"
 #   VERSION=2.1.0 ARCH=amd64 nfpm pkg --config build/linux/nfpm.yaml --packager deb --target build/bin/
 #   VERSION=2.1.0 ARCH=amd64 nfpm pkg --config build/linux/nfpm.yaml --packager rpm --target build/bin/
+#   VERSION=2.1.0 ARCH=amd64 nfpm pkg --config build/linux/nfpm.yaml --packager archlinux --target build/bin/
 #
 # Output (same names as update.AssetNames in internal/update/update.go):
 #   build/bin/markmirror_2.1.0_amd64.deb     sudo apt install ./markmirror_2.1.0_amd64.deb     Remove: sudo apt remove markmirror
 #   build/bin/markmirror-2.1.0-1.x86_64.rpm  sudo dnf install ./markmirror-2.1.0-1.x86_64.rpm  Remove: sudo dnf remove markmirror
+#   build/bin/markmirror-2.1.0-1-x86_64.pkg.tar.zst  sudo pacman -U ./markmirror-2.1.0-1-x86_64.pkg.tar.zst  Remove: sudo pacman -R markmirror
 
 name: markmirror
 version: ${VERSION}          # X.Y.Z, without the "v" of the tag
@@ -34,6 +36,11 @@ overrides:
     depends:
       - gtk3
       - webkit2gtk4.1
+  # Arch Linux package names
+  archlinux:
+    depends:
+      - gtk3
+      - webkit2gtk-4.1
 
 contents:
   - src: build/bin/MarkMirror

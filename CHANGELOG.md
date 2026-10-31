@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Arch Linux package (`markmirror-<version>-1-x86_64.pkg.tar.zst`) attached to every release; pacman installs the GTK/WebKitGTK dependencies.
+- Automatic updates for MarkMirror installed from the Arch Linux package: the app downloads the new package, verifies it and installs it with pacman after asking for the password, then restarts.
+
 ## [2.3.1] - 2026-10-23
 
 ### Changed
