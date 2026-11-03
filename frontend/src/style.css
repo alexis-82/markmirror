@@ -73,6 +73,69 @@ html, body {
     cursor: default;
 }
 
+/* ---- Selettore di emoji ---- */
+
+.emoji-panel {
+    position: fixed;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    width: min(380px, calc(100vw - 16px));
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .25);
+}
+
+.emoji-panel[hidden] {
+    display: none;
+}
+
+.emoji-tabs {
+    flex: none;
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 6px;
+    background: var(--bg-chrome);
+    border-bottom: 1px solid var(--border);
+    border-radius: 6px 6px 0 0;
+}
+
+.emoji-grid {
+    flex: 0 1 280px;
+    min-height: 0;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+    grid-auto-rows: 34px;
+    padding: 6px;
+}
+
+.emoji-tab, .emoji-cell {
+    padding: 0;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: "Segoe UI Emoji", "Noto Color Emoji", var(--font-ui);
+    font-size: 20px;
+    line-height: 1;
+}
+
+.emoji-tab {
+    width: 36px;
+    height: 32px;
+}
+
+.emoji-tab[aria-selected="true"] {
+    background: var(--bg-hover);
+    border-color: var(--border);
+}
+
+.emoji-tab:hover, .emoji-cell:hover {
+    background: var(--bg-hover);
+}
+
 /* ---- Pannelli ---- */
 
 .panes {
@@ -310,7 +373,7 @@ html, body {
         display: block;
     }
 
-    .toolbar, .editor-pane, .divider, .statusbar, .dialog {
+    .toolbar, .editor-pane, .divider, .statusbar, .dialog, .emoji-panel {
         display: none;
     }
 

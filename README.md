@@ -13,7 +13,8 @@ Editor Markdown per Windows e Linux con anteprima in tempo reale: scrivi a sinis
 - Tema chiaro, scuro o di sistema, ricordato tra una sessione e l'altra (in tema scuro anche menu e barra dei menu)
 - Posizione, dimensione e stato ingrandito della finestra ricordati alla riapertura
 - Esportazione in HTML (un unico file con stili e immagini incorporati) e in PDF / stampa (Ctrl+P)
-- Barra degli strumenti: grassetto, corsivo, titolo, elenchi, citazione, link, codice, immagini
+- Barra degli strumenti: grassetto, corsivo, titolo, elenchi, citazione, link, codice, immagini, emoji
+- Selettore con circa 300 emoji tra le più usate, divise in categorie (pulsante 😀 nella barra degli strumenti)
 - Trascinamento nella finestra di file `.md` (per aprirli) e di immagini (per inserirle)
 - Conferma delle modifiche non salvate su Nuovo / Apri / Ricarica / chiusura
 - File → Ricarica (F5): rilegge il file modificato da un altro programma
@@ -81,6 +82,20 @@ sudo sh build/linux/install.sh
 Serve la libreria WebKitGTK 4.1 (`libwebkit2gtk-4.1-0` o equivalente).
 
 Dopo l'installazione trovi MarkMirror nel menu delle applicazioni, e puoi aprire un file `.md` con "Apri con → MarkMirror".
+
+### Emoji
+
+MarkMirror usa i font di emoji del sistema. Se su Linux le emoji appaiono come quadratini, installa il font Noto Color Emoji:
+
+| Sistema | Comando |
+|---|---|
+| Debian / Ubuntu | `sudo apt install fonts-noto-color-emoji` |
+| Fedora | `sudo dnf install google-noto-color-emoji-fonts` |
+| Arch Linux | `sudo pacman -S noto-fonts-emoji` |
+
+I pacchetti `.deb` e `.rpm` lo consigliano e di norma lo installano da soli. Con il pacchetto Arch e con l'archivio `.tar.gz` va installato a mano.
+
+Su Windows le bandiere nazionali possono apparire come coppie di lettere (per esempio IT), perché il font del sistema non le disegna.
 
 ## Aggiornamenti
 

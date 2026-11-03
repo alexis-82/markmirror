@@ -1,11 +1,12 @@
 import './style.css';
 
-import {createEditor, edit, EditCommand, format, FormatCommand, insertImage, replaceDocument, resetDocument, scrollEditorToLine, setEditorDark, topVisibleLine} from './editor';
+import {createEditor, edit, EditCommand, format, FormatCommand, insertEmoji, insertImage, replaceDocument, resetDocument, scrollEditorToLine, setEditorDark, topVisibleLine} from './editor';
 import {Preview, renderStatic} from './preview';
 import {GUIDE, WELCOME} from './content';
 import {buildHtml} from './export';
 import {checkUpdatesAtStartup, initUpdates, isUpdating} from './update';
 import {initGit, refreshGit} from './git';
+import {initEmojiPicker} from './emoji-picker';
 import {
     ExportHTML, GetSettings, ImageLink, InitialFile, NewFile, OpenFile, OpenPath, PickImage, Quit, ReloadFile, SaveFile, SaveFileAs, SetModified,
 } from '../wailsjs/go/main/App';
@@ -342,6 +343,11 @@ document.querySelector('.toolbar')!.addEventListener('click', e => {
     const cmd = btn.dataset.cmd!;
     if (cmd === 'image-file') exclusive(insertImageFromFile);
     else format(view, cmd as FormatCommand);
+});
+
+initEmojiPicker($('emoji-button'), $('emoji-panel'), {
+    onPick: emoji => insertEmoji(view, emoji),
+    onDismiss: () => view.focus(),
 });
 
 // ---- Trascinamento file -----------------------------------------------------

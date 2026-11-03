@@ -172,6 +172,16 @@ export function insertImage(view: EditorView, ref: string, alt = 'image'): void 
     insertAndSelect(view, text, text.length, text.length);
 }
 
+/**
+ * Inserisce un'emoji al posto della selezione. Con "input" (non "input.type")
+ * la cronologia non la unisce a ciò che è stato scritto prima: Ctrl+Z annulla
+ * solo l'emoji.
+ */
+export function insertEmoji(view: EditorView, emoji: string): void {
+    view.dispatch(view.state.replaceSelection(emoji), {userEvent: 'input', scrollIntoView: true});
+    view.focus();
+}
+
 function insertImageTemplate(view: EditorView): void {
     insertAndSelect(view, '![image](url)', 9, 12);
 }

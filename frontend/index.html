@@ -22,6 +22,8 @@
         <span class="sep"></span>
         <button data-cmd="image" title="Inserisci un modello di immagine">Immagine</button>
         <button data-cmd="image-file" title="Scegli un'immagine dal disco (o trascinala nella finestra)">Immagine da file…</button>
+        <span class="sep"></span>
+        <button id="emoji-button" title="Emoji" aria-label="Emoji" aria-haspopup="true" aria-expanded="false">😀</button>
         <span class="spacer"></span>
         <button id="git-commit" title="Commit del solo file aperto e push (Ctrl+Shift+G)" disabled>Commit e push</button>
     </div>
@@ -36,6 +38,8 @@
         <span id="status-file"></span>
         <span id="status-stats"></span>
     </footer>
+
+    <div class="emoji-panel" id="emoji-panel" role="dialog" aria-label="Emoji" hidden></div>
 </div>
 
 <dialog id="dialog" class="dialog">

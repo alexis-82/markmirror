@@ -29,6 +29,10 @@ depends:
   - libgtk-3-0
   - libwebkit2gtk-4.1-0
 
+# Without an emoji font, the toolbar emoji picker shows empty squares
+recommends:
+  - fonts-noto-color-emoji
+
 # Fedora names the same libraries differently (Fedora 40+: glibc of the
 # Ubuntu 24.04 build machine, webkit2gtk 4.1)
 overrides:
@@ -36,11 +40,15 @@ overrides:
     depends:
       - gtk3
       - webkit2gtk4.1
-  # Arch Linux package names
+    recommends:
+      - google-noto-color-emoji-fonts
+  # Arch Linux package names (recommends becomes an optional dependency)
   archlinux:
     depends:
       - gtk3
       - webkit2gtk-4.1
+    recommends:
+      - noto-fonts-emoji
 
 contents:
   - src: build/bin/MarkMirror
