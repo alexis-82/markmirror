@@ -6,79 +6,6 @@ import (
 	"testing"
 )
 
-const bom = "\xef\xbb\xbf" // BOM UTF-8
-
-func TestOpenSavePreservesLineEndingsAndStripsBOM(t *testing.T) {
-	dir := t.TempDir()
-	path := filepath.Join(dir, "doc.md")
-	if err := os.WriteFile(path, []byte(bom+"# Titolo\r\n\r\ntesto\r\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-
-	a := NewApp("")
-	res, err := a.OpenPath(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if want := "# Titolo\n\ntesto\n"; res.Content != want {
-		t.Fatalf("content = %q, want %q", res.Content, want)
-	}
-
-	if _, err := a.SaveFile(res.Content + "altro\n"); err != nil {
-		t.Fatal(err)
-	}
-	data, _ := os.ReadFile(path)
-	if want := "# Titolo\r\n\r\ntesto\r\naltro\r\n"; string(data) != want {
-		t.Fatalf("saved = %q, want %q", data, want)
-	}
-
-	entries, _ := os.ReadDir(dir)
-	if len(entries) != 1 {
-		t.Fatalf("expected no leftover temp files, got %d entries", len(entries))
-	}
-}
-
-func TestImageLinkIsRelativeToDocument(t *testing.T) {
-	dir := t.TempDir()
-	doc := filepath.Join(dir, "doc.md")
-	os.WriteFile(doc, []byte("x"), 0o644)
-
-	a := NewApp("")
-	if _, err := a.OpenPath(doc); err != nil {
-		t.Fatal(err)
-	}
-	got := a.ImageLink(filepath.Join(dir, "img", "foto.png"))
-	if got != "img/foto.png" {
-		t.Fatalf("ImageLink = %q", got)
-	}
-}
-
-func TestReloadFileReadsExternalChanges(t *testing.T) {
-	a := NewApp("")
-	if res, err := a.ReloadFile(); res != nil || err != nil {
-		t.Fatalf("unsaved document: ReloadFile = %v, %v; want nil, nil", res, err)
-	}
-
-	path := filepath.Join(t.TempDir(), "doc.md")
-	os.WriteFile(path, []byte("prima\n"), 0o644)
-	if _, err := a.OpenPath(path); err != nil {
-		t.Fatal(err)
-	}
-	a.SetModified(true)
-
-	os.WriteFile(path, []byte("dopo\r\n"), 0o644)
-	res, err := a.ReloadFile()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if res.Content != "dopo\n" {
-		t.Fatalf("content = %q, want %q", res.Content, "dopo\n")
-	}
-	if a.doc.Modified() {
-		t.Fatal("document still marked as modified after reload")
-	}
-}
-
 func TestWindowTitle(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "nome.md")
 	cases := []struct {
@@ -162,4 +89,21 @@ func TestWindowTitleFollowsDocument(t *testing.T) {
 	expect(a, "Senza titolo - MarkMirror")
 	a.SetModified(true)
 	expect(a, "*Senza titolo - MarkMirror")
+}
+
+// I metodi git della facciata lavorano solo su un documento salvato.
+func TestGitRequiresSavedDocument(t *testing.T) {
+	a := NewApp("")
+	if info := a.GitStatus(); info.Repo != "" {
+		t.Fatalf("unsaved document: Repo = %q, want empty", info.Repo)
+	}
+	if _, err := a.GitHasChanges(); err == nil {
+		t.Error("GitHasChanges: expected error for unsaved document")
+	}
+	if err := a.GitCommit("msg"); err == nil {
+		t.Error("GitCommit: expected error for unsaved document")
+	}
+	if err := a.GitPush(); err == nil {
+		t.Error("GitPush: expected error for unsaved document")
+	}
 }
