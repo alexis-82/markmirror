@@ -1,10 +1,9 @@
-package main
+package document
 
 import (
+	"context"
 	"os"
 	"time"
-
-	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // watchInterval è l'intervallo di controllo delle modifiche esterne al file.
@@ -28,36 +27,36 @@ func statStamp(path string) (fileStamp, bool) {
 	return fileStamp{modTime: info.ModTime(), size: info.Size()}, true
 }
 
-// watchFile controlla periodicamente il documento corrente e avvisa il
-// frontend ("file:changed", con il percorso) quando cambia su disco.
-func (a *App) watchFile() {
+// Watch controlla periodicamente il documento corrente e chiama onChange
+// (con il percorso) quando cambia su disco, finché ctx non termina.
+func (d *Document) Watch(ctx context.Context, onChange func(path string)) {
 	ticker := time.NewTicker(watchInterval)
 	defer ticker.Stop()
 	for {
 		select {
-		case <-a.ctx.Done():
+		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			if path, changed := a.checkExternalChange(); changed {
-				runtime.EventsEmit(a.ctx, "file:changed", path)
+			if path, changed := d.CheckExternalChange(); changed {
+				onChange(path)
 			}
 		}
 	}
 }
 
-// checkExternalChange segnala se il documento corrente è cambiato su disco
+// CheckExternalChange segnala se il documento corrente è cambiato su disco
 // dall'ultimo controllo. Ogni versione viene segnalata una sola volta; un file
 // rimosso o illeggibile non viene segnalato.
-func (a *App) checkExternalChange() (string, bool) {
+func (d *Document) CheckExternalChange() (string, bool) {
 	// Salta il controllo mentre l'applicazione sta leggendo o scrivendo il file.
-	if !a.ioMu.TryLock() {
+	if !d.ioMu.TryLock() {
 		return "", false
 	}
-	defer a.ioMu.Unlock()
+	defer d.ioMu.Unlock()
 
-	a.mu.Lock()
-	path, last := a.currentFile, a.stamp
-	a.mu.Unlock()
+	d.mu.Lock()
+	path, last := d.path, d.stamp
+	d.mu.Unlock()
 	if path == "" {
 		return "", false
 	}
@@ -66,11 +65,11 @@ func (a *App) checkExternalChange() (string, bool) {
 		return "", false
 	}
 
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	if a.currentFile != path {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	if d.path != path {
 		return "", false
 	}
-	a.stamp = stamp
+	d.stamp = stamp
 	return path, true
 }

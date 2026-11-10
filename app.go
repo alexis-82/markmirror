@@ -3,21 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 
 	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 
+	"markmirror-go/internal/document"
 	"markmirror-go/internal/settings"
 )
 
-const (
-	appName = "MarkMirror"
-	bom     = "\xef\xbb\xbf" // BOM UTF-8
-)
+const appName = "MarkMirror"
 
 var markdownFilters = []runtime.FileFilter{
 	{DisplayName: "File Markdown (*.md, *.markdown)", Pattern: "*.md;*.markdown"},
@@ -25,24 +21,14 @@ var markdownFilters = []runtime.FileFilter{
 	{DisplayName: "Tutti i file (*.*)", Pattern: "*.*"},
 }
 
-// FileResult descrive un documento aperto o salvato.
-type FileResult struct {
-	Path    string `json:"path"`
-	Name    string `json:"name"`
-	Content string `json:"content"`
-}
-
-// App contiene lo stato del documento corrente ed espone i metodi al frontend.
+// App è la facciata esposta al frontend: i metodi pubblici sono i binding
+// Wails e delegano ai package di internal/; qui restano dialoghi ed eventi.
 type App struct {
 	ctx context.Context
 
-	ioMu sync.Mutex // serializza letture/scritture del documento con il watcher
+	doc *document.Document
 
 	mu          sync.Mutex
-	currentFile string
-	stamp       fileStamp // versione su disco del documento corrente
-	crlf        bool
-	modified    bool
 	quitting    bool
 	initialFile string
 	settings    settings.Settings
@@ -54,7 +40,7 @@ type App struct {
 }
 
 func NewApp(initialFile string) *App {
-	a := &App{initialFile: initialFile, settings: settings.Load()}
+	a := &App{doc: &document.Document{}, initialFile: initialFile, settings: settings.Load()}
 	a.updates = newUpdater(a)
 	return a
 }
@@ -64,7 +50,9 @@ func (a *App) startup(ctx context.Context) {
 	a.restoreWindow()
 	a.applyWindowTheme()
 	a.updateTitle()
-	go a.watchFile()
+	go a.doc.Watch(ctx, func(path string) {
+		runtime.EventsEmit(ctx, "file:changed", path)
+	})
 	go a.cleanupUpdates()
 }
 
@@ -73,7 +61,7 @@ func (a *App) startup(ctx context.Context) {
 // Viene chiamata anche da Quit, quindi la finestra si salva qui.
 func (a *App) beforeClose(ctx context.Context) bool {
 	a.mu.Lock()
-	block := a.modified && !a.quitting
+	block := a.doc.Modified() && !a.quitting
 	a.mu.Unlock()
 	if block {
 		runtime.EventsEmit(ctx, "app:close-requested")
@@ -92,7 +80,7 @@ func (a *App) Quit() {
 }
 
 // InitialFile apre il file passato da riga di comando, se presente.
-func (a *App) InitialFile() (*FileResult, error) {
+func (a *App) InitialFile() (*document.File, error) {
 	a.mu.Lock()
 	path := a.initialFile
 	a.initialFile = ""
@@ -104,10 +92,10 @@ func (a *App) InitialFile() (*FileResult, error) {
 }
 
 // OpenFile mostra la finestra di apertura. Restituisce nil se annullata.
-func (a *App) OpenFile() (*FileResult, error) {
+func (a *App) OpenFile() (*document.File, error) {
 	path, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
 		Title:            "Apri file",
-		DefaultDirectory: a.docDir(),
+		DefaultDirectory: a.doc.Dir(),
 		Filters:          markdownFilters,
 	})
 	if err != nil || path == "" {
@@ -117,64 +105,35 @@ func (a *App) OpenFile() (*FileResult, error) {
 }
 
 // OpenPath legge un file e lo rende il documento corrente.
-func (a *App) OpenPath(path string) (*FileResult, error) {
-	abs, err := filepath.Abs(path)
+func (a *App) OpenPath(path string) (*document.File, error) {
+	f, err := a.doc.Open(path)
 	if err != nil {
 		return nil, err
 	}
-	a.ioMu.Lock()
-	defer a.ioMu.Unlock()
-	// Stat prima della lettura: se il file cambia nel mezzo, il watcher lo
-	// segnalerà di nuovo invece di perdere la modifica.
-	stamp, _ := statStamp(abs)
-	data, err := os.ReadFile(abs)
-	if err != nil {
-		return nil, fmt.Errorf("impossibile aprire il file: %w", err)
-	}
-	content := strings.TrimPrefix(string(data), bom)
-	crlf := strings.Contains(content, "\r\n")
-	content = strings.ReplaceAll(content, "\r\n", "\n")
-
-	a.mu.Lock()
-	a.currentFile = abs
-	a.stamp = stamp
-	a.crlf = crlf
-	a.modified = false
-	a.mu.Unlock()
 	a.updateTitle()
-
-	return &FileResult{Path: abs, Name: filepath.Base(abs), Content: content}, nil
+	return f, nil
 }
 
 // ReloadFile rilegge dal disco il documento corrente (es. dopo una modifica
 // fatta da un altro programma). Restituisce nil se il documento non è salvato.
-func (a *App) ReloadFile() (*FileResult, error) {
-	a.mu.Lock()
-	path := a.currentFile
-	a.mu.Unlock()
-	if path == "" {
-		return nil, nil
+func (a *App) ReloadFile() (*document.File, error) {
+	f, err := a.doc.Reload()
+	if f != nil {
+		a.updateTitle()
 	}
-	return a.OpenPath(path)
+	return f, err
 }
 
 // NewFile azzera il documento corrente.
 func (a *App) NewFile() {
-	a.mu.Lock()
-	a.currentFile = ""
-	a.stamp = fileStamp{}
-	a.crlf = false
-	a.modified = false
-	a.mu.Unlock()
+	a.doc.Reset()
 	a.updateTitle()
 }
 
 // SaveFile salva sul file corrente, o chiede un nome se non esiste ancora.
 // Restituisce nil se l'utente annulla.
-func (a *App) SaveFile(content string) (*FileResult, error) {
-	a.mu.Lock()
-	path := a.currentFile
-	a.mu.Unlock()
+func (a *App) SaveFile(content string) (*document.File, error) {
+	path := a.doc.Path()
 	if path == "" {
 		return a.SaveFileAs(content)
 	}
@@ -182,17 +141,15 @@ func (a *App) SaveFile(content string) (*FileResult, error) {
 }
 
 // SaveFileAs chiede sempre il nome del file. Restituisce nil se annullata.
-func (a *App) SaveFileAs(content string) (*FileResult, error) {
-	a.mu.Lock()
+func (a *App) SaveFileAs(content string) (*document.File, error) {
 	name := "documento.md"
-	if a.currentFile != "" {
-		name = filepath.Base(a.currentFile)
+	if current := a.doc.Path(); current != "" {
+		name = filepath.Base(current)
 	}
-	a.mu.Unlock()
 
 	path, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
 		Title:            "Salva file",
-		DefaultDirectory: a.docDir(),
+		DefaultDirectory: a.doc.Dir(),
 		DefaultFilename:  name,
 		Filters:          markdownFilters,
 	})
@@ -205,61 +162,18 @@ func (a *App) SaveFileAs(content string) (*FileResult, error) {
 	return a.writeFile(path, content)
 }
 
-func (a *App) writeFile(path, content string) (*FileResult, error) {
-	a.mu.Lock()
-	crlf := a.crlf
-	a.mu.Unlock()
-	if crlf {
-		content = strings.ReplaceAll(content, "\n", "\r\n")
-	}
-	a.ioMu.Lock()
-	defer a.ioMu.Unlock()
-	if err := writeFileAtomic(path, []byte(content)); err != nil {
-		return nil, fmt.Errorf("impossibile salvare il file: %w", err)
-	}
-	stamp, _ := statStamp(path)
-
-	a.mu.Lock()
-	a.currentFile = path
-	a.stamp = stamp
-	a.modified = false
-	a.mu.Unlock()
-	a.updateTitle()
-
-	return &FileResult{Path: path, Name: filepath.Base(path)}, nil
-}
-
-// writeFileAtomic scrive su un file temporaneo e poi lo rinomina, così un
-// errore a metà scrittura non tronca il documento esistente.
-func writeFileAtomic(path string, data []byte) error {
-	tmp, err := os.CreateTemp(filepath.Dir(path), ".markmirror-*.tmp")
+func (a *App) writeFile(path, content string) (*document.File, error) {
+	f, err := a.doc.Save(path, content)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	tmpName := tmp.Name()
-	if _, err := tmp.Write(data); err != nil {
-		tmp.Close()
-		os.Remove(tmpName)
-		return err
-	}
-	if err := tmp.Close(); err != nil {
-		os.Remove(tmpName)
-		return err
-	}
-	if err := os.Rename(tmpName, path); err != nil {
-		os.Remove(tmpName)
-		return err
-	}
-	return nil
+	a.updateTitle()
+	return f, nil
 }
 
 // SetModified aggiorna lo stato "modificato" (usato per titolo e chiusura).
 func (a *App) SetModified(modified bool) {
-	a.mu.Lock()
-	changed := a.modified != modified
-	a.modified = modified
-	a.mu.Unlock()
-	if changed {
+	if a.doc.SetModified(modified) {
 		a.updateTitle()
 	}
 }
@@ -268,10 +182,7 @@ func (a *App) updateTitle() {
 	if a.ctx == nil {
 		return
 	}
-	a.mu.Lock()
-	title := windowTitle(a.currentFile, a.modified)
-	a.mu.Unlock()
-	runtime.WindowSetTitle(a.ctx, title)
+	runtime.WindowSetTitle(a.ctx, windowTitle(a.doc.Status()))
 }
 
 // windowTitle compone il titolo della finestra: percorso completo del
@@ -287,22 +198,12 @@ func windowTitle(file string, modified bool) string {
 	return name + " - " + appName
 }
 
-// docDir restituisce la cartella del documento corrente, o "" se non salvato.
-func (a *App) docDir() string {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	if a.currentFile == "" {
-		return ""
-	}
-	return filepath.Dir(a.currentFile)
-}
-
 // PickImage fa scegliere un'immagine e restituisce il percorso da usare nel
 // markdown, oppure "" se annullata.
 func (a *App) PickImage() (string, error) {
 	path, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
 		Title:            "Seleziona un'immagine",
-		DefaultDirectory: a.docDir(),
+		DefaultDirectory: a.doc.Dir(),
 		Filters: []runtime.FileFilter{
 			{DisplayName: "Immagini", Pattern: "*.png;*.jpg;*.jpeg;*.gif;*.bmp;*.webp;*.svg"},
 			{DisplayName: "Tutti i file (*.*)", Pattern: "*.*"},
@@ -317,11 +218,28 @@ func (a *App) PickImage() (string, error) {
 // ImageLink converte un percorso assoluto in un riferimento per il markdown:
 // relativo alla cartella del documento quando possibile, con slash in avanti.
 func (a *App) ImageLink(path string) string {
-	ref := path
-	if dir := a.docDir(); dir != "" {
-		if rel, err := filepath.Rel(dir, path); err == nil {
-			ref = rel
-		}
+	return a.doc.ImageLink(path)
+}
+
+// ExportHTML chiede dove salvare l'HTML generato dal frontend e lo scrive.
+// Restituisce il percorso del file, oppure "" se l'utente annulla.
+func (a *App) ExportHTML(html string) (string, error) {
+	path, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		Title:            "Esporta in HTML",
+		DefaultDirectory: a.doc.Dir(),
+		DefaultFilename:  a.doc.ExportName(".html"),
+		Filters: []runtime.FileFilter{
+			{DisplayName: "Pagina web (*.html)", Pattern: "*.html;*.htm"},
+		},
+	})
+	if err != nil || path == "" {
+		return "", err
 	}
-	return filepath.ToSlash(ref)
+	if filepath.Ext(path) == "" {
+		path += ".html"
+	}
+	if err := document.WriteAtomic(path, []byte(html)); err != nil {
+		return "", fmt.Errorf("impossibile esportare il file: %w", err)
+	}
+	return path, nil
 }

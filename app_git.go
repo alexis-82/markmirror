@@ -11,10 +11,7 @@ import (
 // GitStatus restituisce il repository del documento corrente e abilita la
 // voce di menu "Commit e push" solo se il documento ne fa parte.
 func (a *App) GitStatus() git.Info {
-	a.mu.Lock()
-	path := a.currentFile
-	a.mu.Unlock()
-	info := git.Status(path)
+	info := git.Status(a.doc.Path())
 	if a.gitItem != nil && a.gitItem.Disabled != (info.Repo == "") {
 		a.gitItem.Disabled = info.Repo == ""
 		runtime.MenuUpdateApplicationMenu(a.ctx)
@@ -24,12 +21,11 @@ func (a *App) GitStatus() git.Info {
 
 // gitFile restituisce il documento corrente, o un errore se non è salvato.
 func (a *App) gitFile() (string, error) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	if a.currentFile == "" {
+	path := a.doc.Path()
+	if path == "" {
 		return "", errors.New("il documento non è salvato")
 	}
-	return a.currentFile, nil
+	return path, nil
 }
 
 // GitHasChanges indica se il documento corrente differisce dall'ultimo

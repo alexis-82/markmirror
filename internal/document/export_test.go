@@ -1,4 +1,4 @@
-package main
+package document
 
 import (
 	"os"
@@ -7,17 +7,17 @@ import (
 )
 
 func TestExportName(t *testing.T) {
-	a := NewApp("")
-	if got := a.exportName(".html"); got != "documento.html" {
+	d := &Document{}
+	if got := d.ExportName(".html"); got != "documento.html" {
 		t.Fatalf("unsaved document: exportName = %q", got)
 	}
 
 	path := filepath.Join(t.TempDir(), "note.di.oggi.md")
 	os.WriteFile(path, []byte("x"), 0o644)
-	if _, err := a.OpenPath(path); err != nil {
+	if _, err := d.Open(path); err != nil {
 		t.Fatal(err)
 	}
-	if got := a.exportName(".html"); got != "note.di.oggi.html" {
+	if got := d.ExportName(".html"); got != "note.di.oggi.html" {
 		t.Fatalf("exportName = %q, want note.di.oggi.html", got)
 	}
 }

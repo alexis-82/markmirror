@@ -34,7 +34,7 @@ func main() {
 		Menu:             app.buildMenu(),
 		AssetServer: &assetserver.Options{
 			Assets:     assets,
-			Middleware: app.localFiles,
+			Middleware: app.doc.LocalFiles,
 		},
 		BackgroundColour: &options.RGBA{R: 255, G: 255, B: 255, A: 255},
 		DragAndDrop: &options.DragAndDrop{

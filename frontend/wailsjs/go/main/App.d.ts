@@ -3,6 +3,7 @@
 import {main} from '../models';
 import {settings} from '../models';
 import {git} from '../models';
+import {document} from '../models';
 
 export function CheckUpdate():Promise<main.UpdateInfo>;
 
@@ -22,24 +23,24 @@ export function GitStatus():Promise<git.Info>;
 
 export function ImageLink(arg1:string):Promise<string>;
 
-export function InitialFile():Promise<main.FileResult>;
+export function InitialFile():Promise<document.File>;
 
 export function InstallUpdate():Promise<void>;
 
 export function NewFile():Promise<void>;
 
-export function OpenFile():Promise<main.FileResult>;
+export function OpenFile():Promise<document.File>;
 
-export function OpenPath(arg1:string):Promise<main.FileResult>;
+export function OpenPath(arg1:string):Promise<document.File>;
 
 export function PickImage():Promise<string>;
 
 export function Quit():Promise<void>;
 
-export function ReloadFile():Promise<main.FileResult>;
+export function ReloadFile():Promise<document.File>;
 
-export function SaveFile(arg1:string):Promise<main.FileResult>;
+export function SaveFile(arg1:string):Promise<document.File>;
 
-export function SaveFileAs(arg1:string):Promise<main.FileResult>;
+export function SaveFileAs(arg1:string):Promise<document.File>;
 
 export function SetModified(arg1:boolean):Promise<void>;

@@ -1,13 +1,12 @@
 package main
 
 import (
-	"net/http"
-	"net/http/httptest"
-	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
 )
+
+const bom = "\xef\xbb\xbf" // BOM UTF-8
 
 func TestOpenSavePreservesLineEndingsAndStripsBOM(t *testing.T) {
 	dir := t.TempDir()
@@ -54,46 +53,6 @@ func TestImageLinkIsRelativeToDocument(t *testing.T) {
 	}
 }
 
-func TestLocalFilesServesOnlyImages(t *testing.T) {
-	dir := t.TempDir()
-	doc := filepath.Join(dir, "doc.md")
-	os.WriteFile(doc, []byte("x"), 0o644)
-	os.MkdirAll(filepath.Join(dir, "img"), 0o755)
-	os.WriteFile(filepath.Join(dir, "img", "a b.png"), []byte("\x89PNG\r\n\x1a\n"), 0o644)
-	os.WriteFile(filepath.Join(dir, "secret.txt"), []byte("segreto"), 0o644)
-
-	a := NewApp("")
-	if _, err := a.OpenPath(doc); err != nil {
-		t.Fatal(err)
-	}
-	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusTeapot) })
-	handler := a.localFiles(next)
-
-	get := func(target string) int {
-		rec := httptest.NewRecorder()
-		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, target, nil))
-		return rec.Code
-	}
-	q := func(p string) string { return localFilePath + "?path=" + url.QueryEscape(p) }
-
-	cases := []struct {
-		name   string
-		target string
-		want   int
-	}{
-		{"relative image", q("img/a b.png"), http.StatusOK},
-		{"absolute image", q(filepath.Join(dir, "img", "a b.png")), http.StatusOK},
-		{"non-image refused", q("secret.txt"), http.StatusNotFound},
-		{"missing image", q("img/nope.png"), http.StatusNotFound},
-		{"other paths passed through", "/index.html", http.StatusTeapot},
-	}
-	for _, c := range cases {
-		if got := get(c.target); got != c.want {
-			t.Errorf("%s: status = %d, want %d", c.name, got, c.want)
-		}
-	}
-}
-
 func TestReloadFileReadsExternalChanges(t *testing.T) {
 	a := NewApp("")
 	if res, err := a.ReloadFile(); res != nil || err != nil {
@@ -115,7 +74,7 @@ func TestReloadFileReadsExternalChanges(t *testing.T) {
 	if res.Content != "dopo\n" {
 		t.Fatalf("content = %q, want %q", res.Content, "dopo\n")
 	}
-	if a.modified {
+	if a.doc.Modified() {
 		t.Fatal("document still marked as modified after reload")
 	}
 }
@@ -158,9 +117,7 @@ func TestWindowTitleFollowsDocument(t *testing.T) {
 	os.WriteFile(readmeB, []byte("# B\n"), 0o644)
 
 	title := func(a *App) string {
-		a.mu.Lock()
-		defer a.mu.Unlock()
-		return windowTitle(a.currentFile, a.modified)
+		return windowTitle(a.doc.Status())
 	}
 	expect := func(a *App, want string) {
 		t.Helper()
