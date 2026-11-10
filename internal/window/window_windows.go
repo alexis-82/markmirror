@@ -1,6 +1,6 @@
 //go:build windows
 
-package main
+package window
 
 import (
 	"unsafe"
@@ -35,9 +35,9 @@ type windowPlacementInfo struct {
 	rcNormalPosition       rect
 }
 
-// windowPlacement legge le dimensioni "normali" della finestra e se è
+// Placement legge le dimensioni "normali" della finestra e se è
 // ingrandita (anche se in questo momento è ridotta a icona).
-func windowPlacement() (settings.WindowState, bool) {
+func Placement() (settings.WindowState, bool) {
 	hwnd := findMainWindow()
 	if hwnd == 0 {
 		return settings.WindowState{}, false
@@ -57,10 +57,10 @@ func windowPlacement() (settings.WindowState, bool) {
 	}, true
 }
 
-// restoreWindowPlacement applica le dimensioni salvate. Se la barra del titolo
+// RestorePlacement applica le dimensioni salvate. Se la barra del titolo
 // non cade su nessuno schermo (es. monitor scollegato) non fa nulla e la
 // finestra resta centrata come da default.
-func restoreWindowPlacement(w settings.WindowState) {
+func RestorePlacement(w settings.WindowState) {
 	if !titleBarOnScreen(w) {
 		return
 	}

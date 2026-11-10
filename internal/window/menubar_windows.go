@@ -1,6 +1,6 @@
 //go:build windows
 
-package main
+package window
 
 import (
 	"sync"
@@ -124,9 +124,9 @@ var (
 	allowDarkModeForWindow, setPreferredAppMode, flushMenuThemes uintptr
 )
 
-// applyMenuTheme rende la barra e i menu a tendina chiari o scuri secondo il
+// ApplyMenuTheme rende la barra e i menu a tendina chiari o scuri secondo il
 // tema scelto ("system" segue l'impostazione di Windows).
-func applyMenuTheme(theme string) {
+func ApplyMenuTheme(theme string) {
 	installOnce.Do(installMenuBarHook)
 	if menuHwnd == 0 {
 		return

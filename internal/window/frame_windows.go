@@ -1,6 +1,6 @@
 //go:build windows
 
-package main
+package window
 
 import (
 	"time"
@@ -24,12 +24,12 @@ const (
 	rdwFrame      = 0x0400
 )
 
-// refreshWindowFrame forza il ridisegno della barra del titolo dopo un cambio
+// RefreshFrame forza il ridisegno della barra del titolo dopo un cambio
 // di tema: su Windows 10 DWM non aggiorna la cornice (i pulsanti riduci,
 // ingrandisci e chiudi spariscono) finché la finestra non viene riattivata.
 // Wails applica il tema in modo asincrono sul thread della UI, per questo
 // si attende un attimo prima di ridisegnare.
-func refreshWindowFrame() {
+func RefreshFrame() {
 	go func() {
 		time.Sleep(50 * time.Millisecond)
 
