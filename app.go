@@ -47,6 +47,8 @@ type App struct {
 
 	updates updater
 	gitItem *menu.MenuItem // "Commit e push", abilitata solo dentro un repo
+
+	preFullscreen *WindowState // geometria prima dello schermo intero
 }
 
 func NewApp(initialFile string) *App {

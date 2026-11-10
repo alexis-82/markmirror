@@ -54,6 +54,9 @@ func (a *App) buildMenu() *menu.Menu {
 	edit.AddSeparator()
 	edit.AddText("Seleziona tutto", nil, a.emitter("menu:select-all"))
 
+	view := m.AddSubmenu("Visualizza")
+	view.AddCheckbox("Schermo intero", false, keys.Key("f11"), a.toggleFullscreen)
+
 	options := m.AddSubmenu("Opzioni")
 	theme := options.AddSubmenu("Tema")
 	current := a.GetSettings()
