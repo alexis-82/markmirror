@@ -38,7 +38,7 @@ type updater struct {
 func newUpdater(a *App) updater {
 	return updater{
 		checker: update.NewChecker(version),
-		install: installUpdate,
+		install: update.Install,
 		quit:    a.Quit,
 		emit:    func(event string, data any) { runtime.EventsEmit(a.ctx, event, data) },
 	}
@@ -77,7 +77,7 @@ func (a *App) CheckUpdate() (UpdateInfo, error) {
 	newer, err := update.IsNewer(r.Version, version)
 	info.Available = err == nil && newer
 	info.Dev = err != nil // la versione corrente non è vX.Y.Z
-	_, assetErr := platformAsset(r.Assets, r.Version)
+	_, assetErr := update.PlatformAsset(r.Assets, r.Version)
 	info.CanInstall = info.Available && assetErr == nil
 	return info, nil
 }
@@ -107,7 +107,7 @@ func (a *App) InstallUpdate() error {
 	if newer, err := update.IsNewer(r.Version, version); err != nil || !newer {
 		return errors.New("nessun aggiornamento da installare")
 	}
-	asset, err := platformAsset(r.Assets, r.Version)
+	asset, err := update.PlatformAsset(r.Assets, r.Version)
 	if err != nil {
 		return err
 	}

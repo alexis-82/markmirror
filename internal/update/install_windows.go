@@ -1,6 +1,6 @@
 //go:build windows
 
-package main
+package update
 
 import (
 	"fmt"
@@ -8,14 +8,12 @@ import (
 	goruntime "runtime"
 
 	"golang.org/x/sys/windows"
-
-	"markmirror-go/internal/update"
 )
 
-// installUpdate avvia il setup scaricato; l'app si chiude subito dopo.
+// Install avvia il setup scaricato; l'app si chiude subito dopo.
 // ShellExecute (a differenza di exec.Command) gestisce anche un setup che
 // chiede l'elevazione. L'hash non serve: il file non passa a un altro utente.
-func installUpdate(path, _ string) error {
+func Install(path, _ string) error {
 	err := windows.ShellExecute(0, windows.StringToUTF16Ptr("open"), windows.StringToUTF16Ptr(path),
 		nil, windows.StringToUTF16Ptr(filepath.Dir(path)), windows.SW_SHOWNORMAL)
 	if err != nil {
@@ -24,7 +22,7 @@ func installUpdate(path, _ string) error {
 	return nil
 }
 
-// platformAsset sceglie il setup: anche la versione portable si aggiorna così.
-func platformAsset(assets []update.Asset, version string) (update.Asset, error) {
-	return update.PickAsset(assets, version, "windows", goruntime.GOARCH)
+// PlatformAsset sceglie il setup: anche la versione portable si aggiorna così.
+func PlatformAsset(assets []Asset, version string) (Asset, error) {
+	return PickAsset(assets, version, "windows", goruntime.GOARCH)
 }

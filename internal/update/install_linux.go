@@ -1,6 +1,6 @@
 //go:build linux
 
-package main
+package update
 
 import (
 	"errors"
@@ -11,8 +11,6 @@ import (
 	goruntime "runtime"
 	"strings"
 	"syscall"
-
-	"markmirror-go/internal/update"
 )
 
 // MarkMirror si installa su Linux in quattro modi:
@@ -81,19 +79,19 @@ func runningExecutable() string {
 	return exe
 }
 
-// platformAsset sceglie il file della release in base a come è installato
+// PlatformAsset sceglie il file della release in base a come è installato
 // MarkMirror.
-func platformAsset(assets []update.Asset, version string) (update.Asset, error) {
+func PlatformAsset(assets []Asset, version string) (Asset, error) {
 	if installedFromDeb() {
-		return update.PickDeb(assets, version, goruntime.GOARCH)
+		return PickDeb(assets, version, goruntime.GOARCH)
 	}
 	if installedFromRpm() {
-		return update.PickRpm(assets, version, goruntime.GOARCH)
+		return PickRpm(assets, version, goruntime.GOARCH)
 	}
 	if installedFromPacman() {
-		return update.PickPacman(assets, version, goruntime.GOARCH)
+		return PickPacman(assets, version, goruntime.GOARCH)
 	}
-	return update.PickAsset(assets, version, "linux", goruntime.GOARCH)
+	return PickAsset(assets, version, "linux", goruntime.GOARCH)
 }
 
 // installCommand restituisce il comando che installa path come root:
@@ -102,9 +100,9 @@ func installCommand(pkexec, exe, path, sum string) []string {
 	return []string{pkexec, filepath.Join(filepath.Dir(exe), updateScript), path, sum}
 }
 
-// installUpdate installa il file scaricato tramite pkexec (richiesta grafica
+// Install installa il file scaricato tramite pkexec (richiesta grafica
 // della password) e avvia la nuova versione; l'app si chiude subito dopo.
-func installUpdate(path, sum string) error {
+func Install(path, sum string) error {
 	pkexec, err := exec.LookPath("pkexec")
 	if err != nil {
 		return errors.New("pkexec non disponibile: aggiorna a mano da terminale con: sudo " + updateScript)

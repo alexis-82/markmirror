@@ -1,7 +1,8 @@
-package main
+package update_test
 
 import (
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
@@ -13,9 +14,10 @@ import (
 // nfpm.yaml) ma l'updater li cerca con update.AssetNames: se un nome cambia
 // da una parte sola, l'aggiornamento non trova più il file.
 
+// readRepoFile legge un file indicato rispetto alla radice del repository.
 func readRepoFile(t *testing.T, path string) string {
 	t.Helper()
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(filepath.Join("..", "..", path))
 	if err != nil {
 		t.Fatal(err)
 	}
