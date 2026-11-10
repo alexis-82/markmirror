@@ -4,6 +4,15 @@
     <meta charset="UTF-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>MarkMirror</title>
+    <script>
+        // Tema prima del primo disegno: con "Scuro" e "Chiaro" data-theme
+        // arriva già dal Go; con "Sistema" lo si ricava qui, senza aspettare
+        // le impostazioni (main.ts lo riallinea appena le riceve).
+        if (!document.documentElement.dataset.theme) {
+            document.documentElement.dataset.theme =
+                matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+    </script>
 </head>
 <body>
 <div id="app">

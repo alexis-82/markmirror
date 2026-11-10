@@ -11,7 +11,7 @@ import {
     ExportHTML, GetSettings, ImageLink, InitialFile, NewFile, OpenFile, OpenPath, PickImage, Quit, ReloadFile, SaveFile, SaveFileAs, SetModified,
 } from '../wailsjs/go/main/App';
 import {settings as cfg} from '../wailsjs/go/models';
-import {EventsOn, OnFileDrop} from '../wailsjs/runtime/runtime';
+import {EventsOn, OnFileDrop, WindowSetBackgroundColour} from '../wailsjs/runtime/runtime';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -413,8 +413,18 @@ function applySettings(next: cfg.Settings): void {
     settings = next;
     const dark = next.theme === 'dark' || (next.theme === 'system' && systemDark.matches);
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    syncWindowBackground();
     setEditorDark(view, dark);
     syncScroll();
+}
+
+// Allinea lo sfondo nativo della finestra (impostato all'avvio in main.go) al
+// tema: è quello che si vede per un istante quando la finestra cambia
+// dimensione, per esempio entrando o uscendo dallo schermo intero.
+function syncWindowBackground(): void {
+    const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+    const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(bg);
+    if (m) WindowSetBackgroundColour(parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16), 255);
 }
 
 systemDark.addEventListener('change', () => applySettings(settings));

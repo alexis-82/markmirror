@@ -34,9 +34,9 @@ func main() {
 		Menu:             app.buildMenu(),
 		AssetServer: &assetserver.Options{
 			Assets:     assets,
-			Middleware: app.doc.LocalFiles,
+			Middleware: assetserver.ChainMiddleware(app.themedIndex, app.doc.LocalFiles),
 		},
-		BackgroundColour: &options.RGBA{R: 255, G: 255, B: 255, A: 255},
+		BackgroundColour: app.windowBackground(),
 		DragAndDrop: &options.DragAndDrop{
 			EnableFileDrop:     true,
 			DisableWebViewDrop: true,

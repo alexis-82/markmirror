@@ -1,6 +1,10 @@
 package main
 
 import (
+	"bytes"
+	"net/http"
+	"net/http/httptest"
+
 	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -43,6 +47,43 @@ func (a *App) applyWindowTheme() {
 		runtime.WindowSetSystemDefaultTheme(a.ctx)
 	}
 	window.RefreshFrame()
+}
+
+// windowBackground è lo sfondo della finestra prima che la pagina sia
+// caricata. Deve coincidere con --bg di frontend/src/theme.css, altrimenti
+// all'apertura si vede un lampo del colore sbagliato; dopo il caricamento lo
+// aggiorna il frontend a ogni cambio di tema.
+func (a *App) windowBackground() *options.RGBA {
+	theme := a.GetSettings().Theme
+	if theme == "dark" || (theme == "system" && window.SystemDark()) {
+		return &options.RGBA{R: 0x1e, G: 0x1e, B: 0x1e, A: 255}
+	}
+	return &options.RGBA{R: 255, G: 255, B: 255, A: 255}
+}
+
+// themedIndex è un middleware dell'AssetServer che scrive il tema salvato in
+// <html data-theme> di index.html, così la pagina nasce con i colori giusti
+// invece di diventare scura solo dopo GetSettings. Con il tema "system" non
+// scrive nulla: lo ricava lo script in testa a index.html.
+func (a *App) themedIndex(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet || (r.URL.Path != "" && r.URL.Path != "/" && r.URL.Path != "/index.html") {
+			next.ServeHTTP(w, r)
+			return
+		}
+		rec := httptest.NewRecorder()
+		next.ServeHTTP(rec, r)
+		body := rec.Body.Bytes()
+		if theme := a.GetSettings().Theme; rec.Code == http.StatusOK && (theme == "dark" || theme == "light") {
+			body = bytes.Replace(body, []byte("<html "), []byte(`<html data-theme="`+theme+`" `), 1)
+		}
+		for k, v := range rec.Header() {
+			w.Header()[k] = v
+		}
+		w.Header().Del("Content-Length")
+		w.WriteHeader(rec.Code)
+		w.Write(body)
+	})
 }
 
 // windowStartState indica a Wails se aprire la finestra ingrandita.
