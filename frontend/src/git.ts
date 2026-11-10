@@ -1,5 +1,5 @@
 import {GitCommit, GitHasChanges, GitPush, GitStatus} from '../wailsjs/go/main/App';
-import {main} from '../wailsjs/go/models';
+import {git} from '../wailsjs/go/models';
 import {EventsOn} from '../wailsjs/runtime/runtime';
 
 /** Funzioni di main.ts usate da commit e push. */
@@ -23,7 +23,7 @@ const TITLE = 'Commit e push';
 const BUTTON_LABEL = 'Commit e push';
 
 let deps: GitDeps;
-let info = new main.GitInfo({repo: '', branch: ''});
+let info = new git.Info({repo: '', branch: ''});
 let request = 0;
 
 export function initGit(d: GitDeps): void {
@@ -42,11 +42,11 @@ export function initGit(d: GitDeps): void {
 /** Aggiorna il repository del documento corrente e abilita o disabilita il pulsante. */
 export async function refreshGit(): Promise<void> {
     const id = ++request;
-    let next: main.GitInfo;
+    let next: git.Info;
     try {
         next = await GitStatus();
     } catch {
-        next = new main.GitInfo({repo: '', branch: ''});
+        next = new git.Info({repo: '', branch: ''});
     }
     if (id !== request) return; // nel frattempo è cambiato documento
     info = next;

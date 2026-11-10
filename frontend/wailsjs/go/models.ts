@@ -1,3 +1,22 @@
+export namespace git {
+	
+	export class Info {
+	    repo: string;
+	    branch: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Info(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.repo = source["repo"];
+	        this.branch = source["branch"];
+	    }
+	}
+
+}
+
 export namespace main {
 	
 	export class FileResult {
@@ -14,20 +33,6 @@ export namespace main {
 	        this.path = source["path"];
 	        this.name = source["name"];
 	        this.content = source["content"];
-	    }
-	}
-	export class GitInfo {
-	    repo: string;
-	    branch: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new GitInfo(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.repo = source["repo"];
-	        this.branch = source["branch"];
 	    }
 	}
 	export class UpdateInfo {
