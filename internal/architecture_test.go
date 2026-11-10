@@ -2,6 +2,7 @@ package internal_test
 
 import (
 	"go/build"
+	"io/fs"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -19,7 +20,17 @@ var forbidden = map[string]string{
 // TestInternalPackagesStayWailsFree controlla gli import di ogni package di
 // internal/, anche indiretti tra package del modulo, per Linux e Windows.
 func TestInternalPackagesStayWailsFree(t *testing.T) {
-	dirs, err := filepath.Glob("*")
+	// Tutte le directory sotto internal/, anche annidate.
+	var dirs []string
+	err := filepath.WalkDir(".", func(path string, e fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if e.IsDir() && path != "." {
+			dirs = append(dirs, path)
+		}
+		return nil
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -32,7 +43,7 @@ func TestInternalPackagesStayWailsFree(t *testing.T) {
 			if err != nil {
 				continue // non è un package Go (o nessun file per questo GOOS)
 			}
-			path := module + "/internal/" + dir
+			path := module + "/internal/" + filepath.ToSlash(dir)
 			if seen[path] {
 				continue
 			}

@@ -9,13 +9,13 @@ import (
 
 func TestParseSettings(t *testing.T) {
 	// File di una versione precedente: nessuna finestra salvata.
-	s := Parse([]byte(`{"theme":"dark","syncScroll":false}`))
+	s := parse([]byte(`{"theme":"dark","syncScroll":false}`))
 	if s.Theme != "dark" || s.SyncScroll || s.Window != nil {
 		t.Fatalf("old settings = %+v", s)
 	}
 
 	// Valori non validi corretti; dimensioni sotto il minimo portate al minimo.
-	s = Parse([]byte(`{"theme":"blu","window":{"x":-10,"y":20,"width":100,"height":50,"maximised":true}}`))
+	s = parse([]byte(`{"theme":"blu","window":{"x":-10,"y":20,"width":100,"height":50,"maximised":true}}`))
 	if s.Theme != "system" {
 		t.Errorf("theme = %q, want system", s.Theme)
 	}
@@ -25,17 +25,17 @@ func TestParseSettings(t *testing.T) {
 	}
 
 	// JSON rovinato: impostazioni predefinite.
-	if s := Parse([]byte(`{`)); s != Default() {
+	if s := parse([]byte(`{`)); s != Default() {
 		t.Errorf("broken file = %+v", s)
 	}
 }
 
 func TestParseSettingsCheckUpdates(t *testing.T) {
 	// File di una versione precedente all'updater: controllo attivo.
-	if s := Parse([]byte(`{"theme":"dark"}`)); !s.CheckUpdates {
+	if s := parse([]byte(`{"theme":"dark"}`)); !s.CheckUpdates {
 		t.Errorf("missing key: CheckUpdates = false, want true")
 	}
-	if s := Parse([]byte(`{"checkUpdates":false}`)); s.CheckUpdates {
+	if s := parse([]byte(`{"checkUpdates":false}`)); s.CheckUpdates {
 		t.Errorf("checkUpdates false: CheckUpdates = true")
 	}
 }
@@ -47,7 +47,7 @@ func TestSettingsRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	out := Parse(data)
+	out := parse(data)
 	if out.Window == nil || *out.Window != *in.Window {
 		t.Fatalf("round trip window = %+v, want %+v", out.Window, in.Window)
 	}

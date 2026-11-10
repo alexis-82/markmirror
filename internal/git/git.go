@@ -1,4 +1,4 @@
-// Package git esegue i comandi git sul documento corrente.
+// Package git esegue i comandi git su un singolo file (status, commit, push).
 package git
 
 import (

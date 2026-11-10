@@ -58,11 +58,11 @@ func Load() Settings {
 	if err != nil {
 		return s
 	}
-	return Parse(data)
+	return parse(data)
 }
 
-// Parse interpreta settings.json, correggendo i valori non validi.
-func Parse(data []byte) Settings {
+// parse interpreta settings.json, correggendo i valori non validi.
+func parse(data []byte) Settings {
 	s := Default()
 	if err := json.Unmarshal(data, &s); err != nil {
 		return Default()
