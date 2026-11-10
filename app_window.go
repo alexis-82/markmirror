@@ -117,9 +117,8 @@ func (a *App) toggleFullscreen(cd *menu.CallbackData) {
 	// Wails inverte già la spunta nativa al clic e con F11, quindi di norma
 	// Checked vale già enter. Lo forziamo solo nel modello: se lo stato era
 	// cambiato per vie esterne, la spunta si riallinea al toggle successivo.
-	// Niente MenuUpdateApplicationMenu: su Linux (Wails v2.16) ricrea un
-	// menubar mai mostrato e scollega quello visibile, e il clic successivo
-	// manda in panic handleMenuItemClick.
+	// Niente MenuUpdateApplicationMenu: la spunta nativa l'ha già invertita
+	// Wails, e su Linux la chiamata non fa nulla (vedi menuUpdatesWork).
 	cd.MenuItem.Checked = enter
 }
 

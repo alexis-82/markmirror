@@ -5,7 +5,7 @@
 **A Markdown editor for Windows and Linux with a live preview: write on the left, see the formatted document on the right.**<br>
 *Editor Markdown per Windows e Linux con anteprima in tempo reale: scrivi a sinistra, vedi il documento formattato a destra.*
 
-[![Version](https://img.shields.io/badge/version-2.6.1-blue?style=plastic)](CHANGELOG.md)&nbsp;&nbsp;&nbsp;[![Go](https://img.shields.io/badge/Go-00ADD8?style=plastic&logo=go&logoColor=white)](#)&nbsp;&nbsp;&nbsp;[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey?style=plastic)](#)
+[![Version](https://img.shields.io/badge/version-2.6.2-blue?style=plastic)](CHANGELOG.md)&nbsp;&nbsp;&nbsp;[![Go](https://img.shields.io/badge/Go-00ADD8?style=plastic&logo=go&logoColor=white)](#)&nbsp;&nbsp;&nbsp;[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey?style=plastic)](#)
 
 🇬🇧 [English](#en)&nbsp;&nbsp;·&nbsp;&nbsp;🇮🇹 [Italiano](#it)
 

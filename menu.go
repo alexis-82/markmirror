@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	goruntime "runtime"
 	"strings"
 
 	"github.com/wailsapp/wails/v2/pkg/menu"
@@ -23,6 +24,12 @@ var themeChoices = []struct{ id, label string }{
 	{"dark", "Scuro"},
 }
 
+// menuUpdatesWork indica se runtime.MenuUpdateApplicationMenu applica le
+// modifiche al menu. Su Linux (Wails v2.16) non fa nulla: il menu della
+// finestra non viene mai registrato e la chiamata esce subito, quindi una
+// voce creata disabilitata resterebbe disabilitata per sempre.
+const menuUpdatesWork = goruntime.GOOS != "linux"
+
 // buildMenu crea il menu dell'applicazione. Le azioni sul documento sono
 // inoltrate al frontend come eventi "menu:*".
 func (a *App) buildMenu() *menu.Menu {
@@ -37,7 +44,9 @@ func (a *App) buildMenu() *menu.Menu {
 	file.AddText("Salva come...", keys.Combo("s", keys.CmdOrCtrlKey, keys.ShiftKey), a.emitter("menu:save-as"))
 	file.AddSeparator()
 	a.gitItem = file.AddText("Commit e push...", keys.Combo("g", keys.CmdOrCtrlKey, keys.ShiftKey), a.emitter("menu:git-commit"))
-	a.gitItem.Disabled = true
+	// Disabilitata finché GitStatus non trova un repository; dove il menu non si
+	// può aggiornare resta abilitata e il frontend avvisa se manca il repo.
+	a.gitItem.Disabled = menuUpdatesWork
 	file.AddSeparator()
 	export := file.AddSubmenu("Esporta")
 	export.AddText("HTML...", nil, a.emitter("menu:export-html"))

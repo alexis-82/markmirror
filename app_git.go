@@ -9,10 +9,11 @@ import (
 )
 
 // GitStatus restituisce il repository del documento corrente e abilita la
-// voce di menu "Commit e push" solo se il documento ne fa parte.
+// voce di menu "Commit e push" solo se il documento ne fa parte (dove il menu
+// si può aggiornare, vedi menuUpdatesWork).
 func (a *App) GitStatus() git.Info {
 	info := git.Status(a.doc.Path())
-	if a.gitItem != nil && a.gitItem.Disabled != (info.Repo == "") {
+	if menuUpdatesWork && a.gitItem != nil && a.gitItem.Disabled != (info.Repo == "") {
 		a.gitItem.Disabled = info.Repo == ""
 		runtime.MenuUpdateApplicationMenu(a.ctx)
 	}
