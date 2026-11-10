@@ -10,6 +10,8 @@ import (
 
 	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
+
+	"markmirror-go/internal/settings"
 )
 
 const (
@@ -43,16 +45,16 @@ type App struct {
 	modified    bool
 	quitting    bool
 	initialFile string
-	settings    Settings
+	settings    settings.Settings
 
 	updates updater
 	gitItem *menu.MenuItem // "Commit e push", abilitata solo dentro un repo
 
-	preFullscreen *WindowState // geometria prima dello schermo intero
+	preFullscreen *settings.WindowState // geometria prima dello schermo intero
 }
 
 func NewApp(initialFile string) *App {
-	a := &App{initialFile: initialFile, settings: loadSettings()}
+	a := &App{initialFile: initialFile, settings: settings.Load()}
 	a.updates = newUpdater(a)
 	return a
 }

@@ -10,7 +10,7 @@ import {initEmojiPicker} from './emoji-picker';
 import {
     ExportHTML, GetSettings, ImageLink, InitialFile, NewFile, OpenFile, OpenPath, PickImage, Quit, ReloadFile, SaveFile, SaveFileAs, SetModified,
 } from '../wailsjs/go/main/App';
-import {main} from '../wailsjs/go/models';
+import {settings as cfg} from '../wailsjs/go/models';
 import {EventsOn, OnFileDrop} from '../wailsjs/runtime/runtime';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -19,7 +19,7 @@ const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as 
 
 let currentPath = '';
 let modified = false;
-let settings: main.Settings = {theme: 'system', syncScroll: true} as main.Settings;
+let settings: cfg.Settings = {theme: 'system', syncScroll: true} as cfg.Settings;
 
 function setModified(value: boolean): void {
     if (modified === value) return;
@@ -409,7 +409,7 @@ function initDivider(): void {
 
 const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
 
-function applySettings(next: main.Settings): void {
+function applySettings(next: cfg.Settings): void {
     settings = next;
     const dark = next.theme === 'dark' || (next.theme === 'system' && systemDark.matches);
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
@@ -418,7 +418,7 @@ function applySettings(next: main.Settings): void {
 }
 
 systemDark.addEventListener('change', () => applySettings(settings));
-EventsOn('settings:changed', (s: main.Settings) => applySettings(s));
+EventsOn('settings:changed', (s: cfg.Settings) => applySettings(s));
 
 // ---- Avvio ------------------------------------------------------------------
 

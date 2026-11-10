@@ -7,6 +7,8 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/menu/keys"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
+
+	"markmirror-go/internal/settings"
 )
 
 const (
@@ -69,17 +71,17 @@ func (a *App) buildMenu() *menu.Menu {
 				it.Checked = it == cd.MenuItem
 			}
 			runtime.MenuUpdateApplicationMenu(a.ctx)
-			a.updateSettings(func(s *Settings) { s.Theme = id })
+			a.updateSettings(func(s *settings.Settings) { s.Theme = id })
 		})
 		themeItems = append(themeItems, item)
 	}
 	options.AddCheckbox("Scroll sincronizzato", current.SyncScroll, nil, func(cd *menu.CallbackData) {
 		checked := cd.MenuItem.Checked
-		a.updateSettings(func(s *Settings) { s.SyncScroll = checked })
+		a.updateSettings(func(s *settings.Settings) { s.SyncScroll = checked })
 	})
 	options.AddCheckbox("Controlla aggiornamenti all'avvio", current.CheckUpdates, nil, func(cd *menu.CallbackData) {
 		checked := cd.MenuItem.Checked
-		a.updateSettings(func(s *Settings) { s.CheckUpdates = checked })
+		a.updateSettings(func(s *settings.Settings) { s.CheckUpdates = checked })
 	})
 
 	help := m.AddSubmenu("Aiuto")

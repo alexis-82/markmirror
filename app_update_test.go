@@ -15,6 +15,8 @@ import (
 	"testing"
 
 	"markmirror-go/internal/update"
+
+	"markmirror-go/internal/settings"
 )
 
 // fakeGitHub serve una "ultima release" con il file per il sistema corrente.
@@ -79,7 +81,7 @@ func updatableApp(t *testing.T, gh *fakeGitHub) (*App, *installRecord) {
 	for _, env := range []string{"TMP", "TEMP", "TMPDIR"} {
 		t.Setenv(env, tmp)
 	}
-	a := &App{ctx: context.Background(), settings: defaultSettings()}
+	a := &App{ctx: context.Background(), settings: settings.Default()}
 	c := update.NewChecker(version)
 	c.Client = gh.srv.Client()
 	c.APIURL = gh.srv.URL + "/api"

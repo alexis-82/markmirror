@@ -4,6 +4,8 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
+
+	"markmirror-go/internal/settings"
 )
 
 // windowStartState indica a Wails se aprire la finestra ingrandita.
@@ -62,7 +64,7 @@ func (a *App) clearWindowSnapshot() {
 }
 
 // windowStateToSave preferisce lo snapshot preso prima dello schermo intero.
-func windowStateToSave(snapshot *WindowState, current WindowState, ok bool) (WindowState, bool) {
+func windowStateToSave(snapshot *settings.WindowState, current settings.WindowState, ok bool) (settings.WindowState, bool) {
 	if snapshot != nil {
 		return *snapshot, true
 	}
@@ -81,7 +83,7 @@ func (a *App) saveWindow() {
 	a.settings.Window = &state
 	s := a.settings
 	a.mu.Unlock()
-	if err := s.save(); err != nil {
+	if err := s.Save(); err != nil {
 		runtime.LogErrorf(a.ctx, "salvataggio impostazioni: %v", err)
 	}
 }

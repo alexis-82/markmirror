@@ -2,10 +2,12 @@
 
 package main
 
+import "markmirror-go/internal/settings"
+
 func refreshWindowFrame() {}
 
 func applyMenuTheme(string) {}
 
-func windowPlacement() (WindowState, bool) { return WindowState{}, false }
+func windowPlacement() (settings.WindowState, bool) { return settings.WindowState{}, false }
 
-func restoreWindowPlacement(WindowState) {}
+func restoreWindowPlacement(settings.WindowState) {}
